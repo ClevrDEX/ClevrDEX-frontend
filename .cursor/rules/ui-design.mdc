@@ -1,0 +1,86 @@
+---
+description: CleanDEX UI design tokens, spacing, and component conventions
+globs: src/**/*.css,src/**/*.tsx
+alwaysApply: false
+---
+
+# CleanDEX UI 规范
+
+样式集中在 `src/app/globals.css`，通过 CSS 变量维护，**不要**在组件内写零散 magic number。
+
+## 设计原则
+
+- **紧凑优先**：移动端字号与边距比桌面再小一档；避免大标题、大 padding 占满屏。
+- **Token 驱动**：新增样式优先复用 `:root` 变量，断点内只覆盖变量而非重复写死数值。
+- **暗色合规风**：深底 + 薄荷绿主色，玻璃拟态面板，细边框高光。
+
+## 色彩（`:root`）
+
+| Token | 用途 |
+|-------|------|
+| `--primary` / `--primary-strong` | 主操作、强调 |
+| `--muted` | 次要文案 |
+| `--border` / `--border-strong` | 面板与输入框描边 |
+| `--danger` | 错误状态 |
+| `--panel` / `--panel-soft` | 卡片背景层 |
+
+## 间距尺度
+
+`--space-1` (4px) → `--space-7` (32px)。页面级：
+
+- `--page-gutter`：左右边距（桌面 16px，680px 下 12px，520px 下 10px）
+- `--header-gap`：页头与内容间距
+- `--section-gap`：区块间距
+- `--card-pad` / `--field-pad`：卡片与输入区内边距
+
+## 字号尺度
+
+| Token | 典型用途 |
+|-------|----------|
+| `--text-xs` (10px) | 标签、徽章、余额 |
+| `--text-sm` (12px) | 导航、引用行、状态 |
+| `--text-base` (14px) | 正文、按钮 |
+| `--text-md` (15px) | 介绍段落 |
+| `--text-xl` (20px) | 卡片标题 h3 |
+| `--text-display` | 首页/落地页大标题 |
+| `--text-amount` | 金额输入框 |
+
+## 圆角
+
+- 卡片：`--card-radius`（22px → 移动端 18px）
+- 输入区：`--field-radius`（16px → 14px）
+- 按钮/芯片：14–16px；全圆角导航/徽章用 `999px`
+
+## 布局
+
+- 页面容器：`.page`，最大宽 1120px
+- 交易卡片：`.swap-card`，侧栏宽 400px（`.action-page` / `.hero` 右列）
+- 断点：`900px` 单列；`680px` 移动端紧凑；`520px` 超小屏再收紧
+
+## 组件类名约定
+
+| 类名 | 说明 |
+|------|------|
+| `.swap-card` | Swap / Liquidity 主卡片 |
+| `.field` + `.field-row` | 金额 + Token 选择行 |
+| `.amount-input` | 大数字输入 |
+| `.token-select-trigger` | Token 下拉触发器 |
+| `.primary-button` / `.secondary-button` | 主次 CTA |
+| `.quote-panel` + `.quote-row` | 报价摘要 |
+| `.status` | 提示/错误条 |
+
+## 移动端规则
+
+在 `@media (max-width: 680px)` 和 `520px` 中**只调整 CSS 变量**，不单独放大元素。隐藏次要信息（如 token 余额、地址）用 display:none，不缩小字号到不可读（最小 9–10px 仅用于徽章）。
+
+## 动效
+
+- 路由：`.route-transition`（220ms）
+- 卡片 hover：轻微上移 + 边框变亮
+- `prefers-reduced-motion: reduce` 已全局降级
+
+## 禁止事项
+
+- 不在 TSX 内联 style 控制布局/字号（RainbowKit 覆盖除外）
+- 不引入新 CSS 框架；不拆多个全局样式文件除非有明确模块化需求
+- 新增页面沿用 `.page` + `SiteHeader` + 现有卡片组件结构
