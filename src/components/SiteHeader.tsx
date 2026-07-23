@@ -47,12 +47,12 @@ export function SiteHeader({ activeNav }: SiteHeaderProps) {
   return (
     <header className={`header${menuOpen ? " header-menu-open" : ""}`}>
       <div className="brand">
-        <Link className="brand-logo-link" href="/" aria-label="CleanDEX home">
+        <Link className="brand-logo-link" href="/" aria-label="Verified DEX home">
           <Image
             className="brand-logo"
-            src="/logo.jpg"
-            alt="CleanDEX"
-            width={160}
+            src="/logo.svg"
+            alt="Verified DEX"
+            width={48}
             height={48}
             priority
           />

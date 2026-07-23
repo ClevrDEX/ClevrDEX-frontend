@@ -246,6 +246,7 @@ a {
 }
 
 @keyframes badge-pulse {
+
   0%,
   100% {
     box-shadow: 0 0 0 rgba(119, 242, 178, 0);
@@ -377,8 +378,9 @@ a {
 
 .action-page {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   justify-content: center;
-  width: min(400px, 100%);
+  width: min(500px, 100%);
   margin: 0 auto;
 }
 
@@ -398,8 +400,7 @@ a {
 }
 
 .eyebrow,
-.card-kicker,
-.live-badge {
+.card-kicker {
   color: var(--primary);
   font-size: var(--text-xs);
   font-weight: 800;
@@ -520,6 +521,8 @@ a {
 .swap-card {
   position: relative;
   overflow: visible;
+  box-sizing: border-box;
+  width: 100%;
   border-radius: var(--card-radius);
   padding: var(--card-pad);
   transition:
@@ -553,16 +556,28 @@ a {
   opacity: 1;
 }
 
-.swap-card > * {
+.swap-card>* {
   position: relative;
 }
 
 .swap-card-header {
+  display: grid;
+  gap: 10px;
+  margin-bottom: var(--space-3);
+}
+
+.swap-card-header-top {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: var(--space-3);
-  margin-bottom: var(--space-3);
+}
+
+.swap-card-header-start {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  gap: 10px;
 }
 
 .swap-card-header-actions {
@@ -610,12 +625,9 @@ a {
   letter-spacing: -0.03em;
 }
 
-.live-badge {
-  border: 1px solid rgba(119, 242, 178, 0.32);
-  border-radius: 999px;
-  background: rgba(119, 242, 178, 0.12);
-  padding: 5px 8px;
-  box-shadow: 0 0 0 rgba(119, 242, 178, 0);
+.swap-card .swap-card-title {
+  margin: 0;
+  text-align: center;
 }
 
 .field {
@@ -635,7 +647,7 @@ a {
   box-shadow: 0 12px 34px rgba(49, 217, 134, 0.1);
 }
 
-.field + .field {
+.field+.field {
   margin-top: var(--space-1);
 }
 
@@ -784,12 +796,6 @@ a {
   font-weight: 700;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.token-select-balance {
-  color: #c8d7e8;
-  font-size: 10px;
-  font-weight: 600;
 }
 
 .token-select-placeholder {
@@ -1056,11 +1062,13 @@ a {
 }
 
 .liquidity-tabs a {
+  min-width: 48px;
   border-radius: 999px;
   padding: 6px 12px;
   color: var(--muted);
   font-size: 12px;
   font-weight: 700;
+  text-align: center;
   text-decoration: none;
   transition:
     background 160ms ease,
@@ -1150,37 +1158,6 @@ a {
 .lp-empty-state {
   display: grid;
   gap: 16px;
-}
-
-.remove-header-copy {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-}
-
-.remove-card-header {
-  display: grid;
-  gap: 10px;
-  margin-bottom: 14px;
-}
-
-.remove-card-header-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.remove-card-title {
-  margin: 0;
-  font-size: var(--text-xl);
-  letter-spacing: -0.03em;
-  text-align: center;
-}
-
-.back-button-spacer {
-  width: 32px;
-  flex-shrink: 0;
 }
 
 .back-button {
@@ -1451,12 +1428,10 @@ a {
 .primary-button::after {
   position: absolute;
   inset: 0;
-  background: linear-gradient(
-    110deg,
-    transparent 0%,
-    rgba(255, 255, 255, 0.32) 45%,
-    transparent 70%
-  );
+  background: linear-gradient(110deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.32) 45%,
+      transparent 70%);
   content: "";
   transform: translateX(-120%);
 }
@@ -1518,6 +1493,7 @@ a {
 }
 
 @media (max-width: 900px) {
+
   .hero,
   .liquidity-layout {
     grid-template-columns: 1fr;
@@ -1640,11 +1616,6 @@ a {
   }
 
   .swap-card-header {
-    align-items: flex-start;
-    margin-bottom: var(--space-2);
-  }
-
-  .liquidity-card .remove-card-header {
     gap: var(--space-2);
     margin-bottom: var(--space-2);
   }
@@ -1654,7 +1625,7 @@ a {
     padding: var(--space-2) 10px;
   }
 
-  .liquidity-card .field + .field {
+  .liquidity-card .field+.field {
     margin-top: 2px;
   }
 
@@ -1666,11 +1637,6 @@ a {
 
   .liquidity-card .remove-form-actions {
     margin-top: var(--space-2);
-  }
-
-  .liquidity-card .live-badge {
-    padding: 4px 6px;
-    font-size: 9px;
   }
 
   .liquidity-card .token-chip {
@@ -1698,10 +1664,6 @@ a {
 
   .token-select-copy strong {
     font-size: var(--text-sm);
-  }
-
-  .token-select-balance {
-    display: none;
   }
 
   .quote-row {
@@ -1849,11 +1811,6 @@ a {
     margin-bottom: var(--space-2);
   }
 
-  .live-badge {
-    padding: 4px 6px;
-    font-size: 9px;
-  }
-
   .settings {
     gap: 6px;
     margin: var(--space-2) 0;
@@ -1928,6 +1885,7 @@ a {
 }
 
 @media (prefers-reduced-motion: reduce) {
+
   *,
   *::before,
   *::after {

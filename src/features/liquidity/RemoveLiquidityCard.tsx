@@ -26,6 +26,7 @@ import {
   getDeadlineMinutes,
   getSlippageBps,
 } from "@/features/forms/numericInput"
+import { SwapCardHeader } from "@/features/forms/SwapCardHeader"
 import { TransactionSettingsModal } from "@/features/forms/TransactionSettingsModal"
 import { formatTokenBalance } from "@/features/tokens/useTokenBalance"
 import { TokenAvatar } from "@/features/tokens/TokenAvatar"
@@ -48,6 +49,9 @@ export function RemoveLiquidityCard() {
     null,
   )
   const positionsQuery = useLpPositions(chainId, tokens, address)
+  const [slippage, setSlippage] = useState("0.5")
+  const [deadline, setDeadline] = useState("20")
+  const [settingsOpen, setSettingsOpen] = useState(false)
 
   useEffect(() => {
     if (!selectedPosition || !positionsQuery.data) {
@@ -70,11 +74,14 @@ export function RemoveLiquidityCard() {
       <RemoveLiquidityHeader
         selectedPosition={selectedPosition}
         onBack={() => setSelectedPosition(null)}
+        onSettingsOpen={() => setSettingsOpen(true)}
       />
 
       {selectedPosition ? (
         <RemovePositionForm
           position={selectedPosition}
+          slippage={slippage}
+          deadline={deadline}
           onComplete={() => {
             positionsQuery.refetch()
           }}
@@ -90,6 +97,17 @@ export function RemoveLiquidityCard() {
           onSelect={setSelectedPosition}
         />
       )}
+
+      <TransactionSettingsModal
+        open={settingsOpen}
+        title="Liquidity settings"
+        description="Adjust slippage tolerance and transaction deadline."
+        slippage={slippage}
+        deadline={deadline}
+        onSlippageChange={setSlippage}
+        onDeadlineChange={setDeadline}
+        onClose={() => setSettingsOpen(false)}
+      />
     </section>
   )
 }
@@ -97,14 +115,18 @@ export function RemoveLiquidityCard() {
 function RemoveLiquidityHeader({
   selectedPosition,
   onBack,
+  onSettingsOpen,
 }: {
   selectedPosition: LpPosition | null
   onBack: () => void
+  onSettingsOpen: () => void
 }) {
   return (
-    <div className="remove-card-header">
-      <div className="remove-card-header-top">
-        {selectedPosition ? (
+    <SwapCardHeader
+      kicker="Pool operations"
+      title="Remove Liquidity"
+      leading={
+        selectedPosition ? (
           <button
             className="back-button"
             type="button"
@@ -113,21 +135,19 @@ function RemoveLiquidityHeader({
           >
             ←
           </button>
-        ) : (
-          <span aria-hidden="true" className="back-button-spacer" />
-        )}
-        <div className="swap-card-header-actions">
-          <nav className="liquidity-tabs" aria-label="Liquidity actions">
-            <Link href="/liquidity/add">Add</Link>
-            <Link className="active" href="/liquidity/remove">
-              Remove
-            </Link>
-          </nav>
-          <span className="live-badge">ERC20</span>
-        </div>
-      </div>
-      <h3 className="remove-card-title">Remove Liquidity</h3>
-    </div>
+        ) : null
+      }
+      actions={
+        <nav className="liquidity-tabs" aria-label="Liquidity actions">
+          <Link href="/liquidity/add">Add</Link>
+          <Link className="active" href="/liquidity/remove">
+            Remove
+          </Link>
+        </nav>
+      }
+      settingsLabel="Liquidity settings"
+      onSettingsClick={onSettingsOpen}
+    />
   )
 }
 
@@ -208,9 +228,13 @@ function PositionList({
 
 function RemovePositionForm({
   position,
+  slippage,
+  deadline,
   onComplete,
 }: {
   position: LpPosition
+  slippage: string
+  deadline: string
   onComplete: () => void
 }) {
   const { address } = useAccount()
@@ -222,9 +246,6 @@ function RemovePositionForm({
 
   const [amount0, setAmount0] = useState("")
   const [amount1, setAmount1] = useState("")
-  const [slippage, setSlippage] = useState("0.5")
-  const [deadline, setDeadline] = useState("20")
-  const [settingsOpen, setSettingsOpen] = useState(false)
   const [error, setError] = useState("")
 
   const { tokenA, tokenB, pairAddress } = position
@@ -534,32 +555,6 @@ function RemovePositionForm({
       </div>
 
       <div className="remove-form-actions">
-        <button
-          className="settings-button"
-          type="button"
-          aria-label="Liquidity settings"
-          onClick={() => setSettingsOpen(true)}
-        >
-          <svg
-            aria-hidden="true"
-            fill="none"
-            height="18"
-            viewBox="0 0 24 24"
-            width="18"
-          >
-            <path
-              d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z"
-              stroke="currentColor"
-              strokeWidth="1.8"
-            />
-            <path
-              d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9c.26.604.852.997 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"
-              stroke="currentColor"
-              strokeWidth="1.8"
-            />
-          </svg>
-        </button>
-
         {needsApproval ? (
           <button
             className="primary-button remove-action-button"
@@ -585,17 +580,6 @@ function RemovePositionForm({
         error={error}
         insufficientBalance={insufficientBalance}
         txSuccess={isSuccess}
-      />
-
-      <TransactionSettingsModal
-        open={settingsOpen}
-        title="Liquidity settings"
-        description="Adjust slippage tolerance and transaction deadline."
-        slippage={slippage}
-        deadline={deadline}
-        onSlippageChange={setSlippage}
-        onDeadlineChange={setDeadline}
-        onClose={() => setSettingsOpen(false)}
       />
     </>
   )

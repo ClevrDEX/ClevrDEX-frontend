@@ -36,9 +36,6 @@ export function TokenSelect({
   const [importError, setImportError] = useState("")
   const selectedToken = tokens.find((token) => token.address === value)
   const balancesQuery = useTokenBalances(tokens, owner)
-  const selectedBalance = selectedToken
-    ? balancesQuery.balancesByAddress.get(selectedToken.address.toLowerCase())
-    : undefined
   const normalizedQuery = query.trim()
   const searchAddress = isAddress(normalizedQuery)
     ? getAddress(normalizedQuery)
@@ -129,14 +126,6 @@ export function TokenSelect({
             <TokenAvatar token={selectedToken} />
             <span className="token-select-copy">
               <strong>{selectedToken.symbol}</strong>
-              {owner ? (
-                <span className="token-select-balance">
-                  {formatTokenBalance(
-                    selectedBalance,
-                    selectedToken.decimals,
-                  )}
-                </span>
-              ) : null}
             </span>
           </>
         ) : (

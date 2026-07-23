@@ -1,0 +1,37 @@
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Verified DEX favicon</title>
+  <desc id="desc">A compact verified swap emblem with a shield, checkmark, and routing arcs.</desc>
+  <defs>
+    <linearGradient id="bg" x1="6" y1="4" x2="58" y2="64" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#10251F"/>
+      <stop offset="0.56" stop-color="#071512"/>
+      <stop offset="1" stop-color="#101A30"/>
+    </linearGradient>
+    <linearGradient id="mint" x1="18" y1="9" x2="47" y2="54" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#C6FFE3"/>
+      <stop offset="0.5" stop-color="#77F2B2"/>
+      <stop offset="1" stop-color="#39C9FF"/>
+    </linearGradient>
+    <linearGradient id="violet" x1="20" y1="45" x2="45" y2="19" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#77F2B2"/>
+      <stop offset="1" stop-color="#8AB4FF"/>
+    </linearGradient>
+    <filter id="glow" x="0" y="0" width="64" height="64" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feColorMatrix in="blur" type="matrix" values="0 0 0 0 0.466 0 0 0 0 0.949 0 0 0 0 0.698 0 0 0 0.5 0"/>
+      <feBlend in="SourceGraphic"/>
+    </filter>
+  </defs>
+  <rect x="2" y="2" width="60" height="60" rx="16" fill="url(#bg)"/>
+  <rect x="2.75" y="2.75" width="58.5" height="58.5" rx="15.25" stroke="url(#mint)" stroke-opacity="0.42" stroke-width="1.5"/>
+  <path d="M12 21C20.2 13 33 12.3 42.5 18.4" stroke="#77F2B2" stroke-opacity="0.34" stroke-width="2.2" stroke-linecap="round"/>
+  <path d="M52 43C43.8 51 31 51.7 21.5 45.6" stroke="#39C9FF" stroke-opacity="0.34" stroke-width="2.2" stroke-linecap="round"/>
+  <path d="M43 13.8L43.4 19.7L37.8 17.8" stroke="#77F2B2" stroke-opacity="0.7" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M21 50.2L20.6 44.3L26.2 46.2" stroke="#39C9FF" stroke-opacity="0.7" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+  <g filter="url(#glow)">
+    <path d="M32 8.5L50.5 16.3V29.2C50.5 41.4 43.2 51.8 32 55C20.8 51.8 13.5 41.4 13.5 29.2V16.3L32 8.5Z" fill="#071512" stroke="url(#mint)" stroke-width="2.4" stroke-linejoin="round"/>
+    <path d="M32 16L44 21.1V29.3C44 37.2 39.4 43.8 32 46.5C24.6 43.8 20 37.2 20 29.3V21.1L32 16Z" fill="url(#mint)" fill-opacity="0.15"/>
+    <path d="M32 23.8L40.6 32.4L32 41L23.4 32.4L32 23.8Z" fill="#071512" stroke="url(#violet)" stroke-width="2.2" stroke-linejoin="round"/>
+    <path d="M25.3 34.4L29.9 39L39.5 27.6" stroke="url(#mint)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+</svg>

@@ -6,8 +6,13 @@ import type { Metadata } from "next"
 import { AppProviders } from "@/providers/AppProviders"
 
 export const metadata: Metadata = {
-  title: "CleanDEX",
+  title: "Verified DEX",
   description: "APass Compliance decentralized exchange frontend",
+  icons: {
+    icon: "/favicon.svg",
+    shortcut: "/favicon.svg",
+    apple: "/favicon.svg",
+  },
 }
 
 export default function RootLayout({

@@ -32,7 +32,7 @@ export default function Home() {
           <span className="eyebrow">Compliance rails for onchain markets</span>
           <h1>Trade through a cleaner, policy-aware DEX interface.</h1>
           <p>
-            CleanDEX brings APass Compliance into a focused swap experience
+            Verified DEX brings APass Compliance into a focused swap experience
             with transparent routing, slippage controls and wallet-native
             execution across configured deployments.
           </p>
