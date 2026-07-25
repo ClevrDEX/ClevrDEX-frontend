@@ -16,6 +16,9 @@ export type DexDeployment = {
   router: `0x${string}`
   wrappedNative: TokenInfo
   initCodePairHash: `0x${string}`
+  apass: `0x${string}`
+  tokenPolicy: `0x${string}`
+  complianceValidator: `0x${string}`
   baseTokens: TokenInfo[]
   tokenList: TokenInfo[]
 }
@@ -54,6 +57,9 @@ export const DEX_DEPLOYMENTS: Record<number, DexDeployment> = {
     wrappedNative: baseSepoliaWrappedNative,
     initCodePairHash:
       "0x899bfae07aebcbd41dd8c0277217ba2321dba16b706d48202bd5fe6c8fe27285",
+    apass: "0xbA82D189540CaC9DC6FF46B6837CaC1BFdEC58B9",
+    tokenPolicy: "0x36489bE45fa84f70a0c2BDB11D824Be608CB12Dd",
+    complianceValidator: "0xaC7e5179C2C7f03f209136886c172eb34F161792",
     baseTokens: [baseSepoliaUsdc],
     tokenList: [baseSepoliaUsdc, baseSepoliaAUsdc],
   },

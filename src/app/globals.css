@@ -875,6 +875,99 @@ a {
   transform: rotate(90deg);
 }
 
+.transaction-flow-modal {
+  width: min(460px, 100%);
+}
+
+.transaction-flow-body {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.transaction-flow-steps {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.transaction-flow-step {
+  display: grid;
+  grid-template-columns: 30px 1fr;
+  gap: var(--space-2);
+  border: 1px solid rgba(255, 255, 255, 0.055);
+  border-radius: 14px;
+  background: rgba(4, 10, 18, 0.48);
+  padding: 11px;
+}
+
+.transaction-flow-step.active,
+.transaction-flow-step.confirming {
+  border-color: rgba(119, 242, 178, 0.28);
+  background: rgba(119, 242, 178, 0.08);
+}
+
+.transaction-flow-step.success,
+.transaction-flow-step.skipped {
+  border-color: rgba(119, 242, 178, 0.18);
+}
+
+.transaction-flow-step.error {
+  border-color: rgba(255, 91, 91, 0.28);
+}
+
+.transaction-flow-step-index {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.055);
+  color: var(--text);
+  font-size: var(--text-xs);
+  font-weight: 900;
+}
+
+.transaction-flow-step-main {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.transaction-flow-step-main strong {
+  color: var(--text);
+  font-size: var(--text-sm);
+}
+
+.transaction-flow-step-main span {
+  color: var(--muted);
+  font-size: var(--text-xs);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.transaction-flow-step p {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: var(--text-sm);
+  line-height: 1.45;
+}
+
+.transaction-flow-step code {
+  display: inline-block;
+  margin-top: var(--space-2);
+  border: 1px solid rgba(255, 255, 255, 0.055);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.045);
+  color: var(--primary);
+  padding: 3px 8px;
+  font-size: var(--text-xs);
+}
+
 .token-search-input {
   width: 100%;
   border: 1px solid rgba(255, 255, 255, 0.08);
@@ -1411,6 +1504,9 @@ a {
 
 .primary-button {
   position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   overflow: hidden;
   width: 100%;
   border: 1px solid rgba(255, 255, 255, 0.18);
@@ -1423,6 +1519,8 @@ a {
   box-shadow: 0 14px 32px rgba(49, 217, 134, 0.24);
   font-size: var(--text-base);
   font-weight: 900;
+  text-align: center;
+  text-decoration: none;
 }
 
 .primary-button::after {
@@ -1443,6 +1541,19 @@ a {
 
 .primary-button:hover:not(:disabled)::after {
   animation: button-sheen 760ms ease;
+}
+
+.compliance-action-button {
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: 11px 13px;
+  line-height: 1.25;
+}
+
+.compliance-action-button small {
+  color: rgba(3, 17, 10, 0.72);
+  font-size: var(--text-xs);
+  font-weight: 800;
 }
 
 .quote-panel {
@@ -1486,6 +1597,7 @@ a {
   padding: 10px var(--space-3);
   font-size: var(--text-sm);
   line-height: 1.45;
+  overflow-wrap: anywhere;
 }
 
 .status.error {

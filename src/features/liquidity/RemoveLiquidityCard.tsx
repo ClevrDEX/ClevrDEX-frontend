@@ -6,12 +6,13 @@ import { formatUnits, parseUnits, zeroAddress } from "viem"
 import {
   useAccount,
   useChainId,
+  usePublicClient,
   useReadContract,
-  useWaitForTransactionReceipt,
   useWriteContract,
 } from "wagmi"
 
 import { getDexDeployment, type TokenInfo } from "@/chains/deployments"
+import { useTradeCompliance } from "@/compliance/useTradeCompliance"
 import { erc20Abi } from "@/dex/v2/abi/erc20"
 import { v2PairAbi } from "@/dex/v2/abi/pair"
 import { v2RouterAbi } from "@/dex/v2/abi/router"
@@ -28,6 +29,12 @@ import {
 } from "@/features/forms/numericInput"
 import { SwapCardHeader } from "@/features/forms/SwapCardHeader"
 import { TransactionSettingsModal } from "@/features/forms/TransactionSettingsModal"
+import {
+  TransactionFlowModal,
+  type TransactionFlowStep,
+  updateFlowStep,
+  waitForAllowance,
+} from "@/features/forms/TransactionFlowModal"
 import { formatTokenBalance } from "@/features/tokens/useTokenBalance"
 import { TokenAvatar } from "@/features/tokens/TokenAvatar"
 import {
@@ -239,14 +246,17 @@ function RemovePositionForm({
 }) {
   const { address } = useAccount()
   const deployment = getDexDeployment(useChainId())
-  const { writeContractAsync, data: hash, isPending } = useWriteContract()
-  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
-    hash,
-  })
+  const publicClient = usePublicClient()
+  const { writeContractAsync, isPending } = useWriteContract()
 
   const [amount0, setAmount0] = useState("")
   const [amount1, setAmount1] = useState("")
   const [error, setError] = useState("")
+  const [txSuccess, setTxSuccess] = useState(false)
+  const [flowOpen, setFlowOpen] = useState(false)
+  const [flowRunning, setFlowRunning] = useState(false)
+  const [flowError, setFlowError] = useState("")
+  const [flowSteps, setFlowSteps] = useState<TransactionFlowStep[]>([])
 
   const { tokenA, tokenB, pairAddress } = position
   const slippageBps = getSlippageBps(slippage)
@@ -370,51 +380,97 @@ function RemovePositionForm({
     (parsedAmount1 > 0n && parsedAmount1 > maxAmount1) ||
     (parsedLpAmount > 0n && parsedLpAmount > lpBalance)
   const needsApproval = parsedLpAmount > 0n && lpAllowance < parsedLpAmount
+  const complianceQuery = useTradeCompliance({
+    address,
+    deployment,
+    publicClient,
+    enabled:
+      Boolean(address) &&
+      Boolean(deployment),
+    poolPairs: [[tokenA.address, tokenB.address]],
+    tokenChecks: [
+      {
+        token: token0.address,
+        symbol: token0.symbol,
+        amount: parsedAmount0,
+        direction: "out",
+      },
+      {
+        token: token1.address,
+        symbol: token1.symbol,
+        amount: parsedAmount1,
+        direction: "out",
+      },
+    ],
+  })
+  const complianceMessage =
+    complianceQuery.data && !complianceQuery.data.allowed
+      ? complianceQuery.data.message
+      : ""
+  const complianceAction =
+    complianceQuery.data && "action" in complianceQuery.data
+      ? complianceQuery.data.action
+      : undefined
+  const complianceInitialChecking =
+    complianceQuery.isLoading ||
+    (complianceQuery.isFetching && !complianceQuery.data)
+  const complianceBlocked = complianceInitialChecking || Boolean(complianceMessage)
   const actionDisabled =
     !address ||
     !deployment ||
     deployment.router === zeroAddress ||
     parsedLpAmount <= 0n ||
     insufficientBalance ||
+    complianceBlocked ||
     isPending ||
-    isConfirming
+    flowRunning
 
-  useEffect(() => {
-    if (isSuccess) {
-      onComplete()
-    }
-  }, [isSuccess, onComplete])
-
-  async function approveLpToken() {
+  async function executeRemoveLiquidityFlow() {
     setError("")
+    setFlowError("")
+    setTxSuccess(false)
 
-    if (!deployment || parsedLpAmount <= 0n) {
+    if (!address || !deployment || !publicClient || parsedLpAmount <= 0n) {
       return
     }
 
-    try {
-      await writeContractAsync({
-        address: pairAddress,
-        abi: erc20Abi,
-        functionName: "approve",
-        args: [deployment.router, parsedLpAmount],
-      })
+    const nextSteps = createRemoveLiquidityFlowSteps(needsApproval)
+    let currentStepId = nextSteps[0]?.id ?? ""
 
-      await lpAllowanceQuery.refetch()
-    } catch (err) {
-      setError(getReadableError(err))
-    }
-  }
-
-  async function removeLiquidity() {
-    setError("")
-
-    if (!address || !deployment || parsedLpAmount <= 0n) {
-      return
-    }
+    setFlowSteps(nextSteps)
+    setFlowOpen(true)
+    setFlowRunning(true)
 
     try {
-      await writeContractAsync({
+      if (needsApproval) {
+        currentStepId = "approve-lp"
+        updateFlowStep(setFlowSteps, currentStepId, { status: "active" })
+        const approveHash = await writeContractAsync({
+          address: pairAddress,
+          abi: erc20Abi,
+          functionName: "approve",
+          args: [deployment.router, parsedLpAmount],
+        })
+
+        updateFlowStep(setFlowSteps, currentStepId, {
+          status: "confirming",
+          hash: approveHash,
+          description:
+            "Approval submitted. Waiting for the LP allowance to update.",
+        })
+        const approveReceipt = await publicClient.waitForTransactionReceipt({
+          hash: approveHash,
+        })
+        if (approveReceipt.status !== "success") {
+          throw new Error("Approval transaction reverted.")
+        }
+        await waitForAllowance(() => lpAllowanceQuery.refetch(), parsedLpAmount)
+        updateFlowStep(setFlowSteps, currentStepId, { status: "success" })
+      }
+
+      currentStepId = "remove"
+      updateFlowStep(setFlowSteps, currentStepId, { status: "active" })
+      const removeHash = await writeContractAsync({
         address: deployment.router,
         abi: v2RouterAbi,
         functionName: "removeLiquidity",
@@ -428,8 +484,34 @@ function RemovePositionForm({
           getDeadline(deadlineMinutes),
         ],
       })
+
+      updateFlowStep(setFlowSteps, currentStepId, {
+        status: "confirming",
+        hash: removeHash,
+        description:
+          "Removal transaction submitted. You can close this window while it confirms on-chain.",
+      })
+      const removeReceipt = await publicClient.waitForTransactionReceipt({
+        hash: removeHash,
+      })
+      if (removeReceipt.status !== "success") {
+        throw new Error("Remove liquidity transaction reverted.")
+      }
+      updateFlowStep(setFlowSteps, currentStepId, { status: "success" })
+      setTxSuccess(true)
+      await Promise.all([
+        lpBalanceQuery.refetch(),
+        lpAllowanceQuery.refetch(),
+        reservesQuery.refetch(),
+      ])
+      onComplete()
     } catch (err) {
-      setError(getReadableError(err))
+      const message = getReadableError(err)
+      setError(message)
+      setFlowError(message)
+      updateFlowStep(setFlowSteps, currentStepId, { status: "error" })
+    } finally {
+      setFlowRunning(false)
     }
   }
 
@@ -555,23 +637,38 @@ function RemovePositionForm({
       </div>
 
       <div className="remove-form-actions">
-        {needsApproval ? (
-          <button
-            className="primary-button remove-action-button"
-            disabled={actionDisabled}
-            type="button"
-            onClick={approveLpToken}
-          >
-            {isPending ? "Approving..." : "Approve LP token"}
-          </button>
+        {complianceBlocked ? (
+          complianceAction ? (
+            <a
+              className="primary-button remove-action-button compliance-action-button"
+              href={complianceAction.href}
+              rel="noreferrer"
+              target="_blank"
+            >
+              <span>{complianceAction.label}</span>
+              <small>{complianceMessage}</small>
+            </a>
+          ) : (
+            <button
+              className="primary-button remove-action-button"
+              disabled
+              type="button"
+            >
+              {complianceMessage || "Checking APass compliance..."}
+            </button>
+          )
         ) : (
           <button
             className="primary-button remove-action-button"
             disabled={actionDisabled}
             type="button"
-            onClick={removeLiquidity}
+            onClick={executeRemoveLiquidityFlow}
           >
-            {isPending || isConfirming ? "Removing..." : "Remove Liquidity"}
+            {flowRunning || isPending
+              ? "Processing..."
+              : needsApproval
+                ? "Approve and Remove Liquidity"
+                : "Remove Liquidity"}
           </button>
         )}
       </div>
@@ -579,7 +676,18 @@ function RemovePositionForm({
       <RemoveFormStatus
         error={error}
         insufficientBalance={insufficientBalance}
-        txSuccess={isSuccess}
+        complianceLoading={false}
+        complianceMessage=""
+        txSuccess={txSuccess}
+      />
+
+      <TransactionFlowModal
+        open={flowOpen}
+        title="Remove liquidity progress"
+        description="Approve LP tokens first if needed, then remove liquidity."
+        steps={flowSteps}
+        error={flowError}
+        onClose={() => setFlowOpen(false)}
       />
     </>
   )
@@ -627,10 +735,14 @@ function RemoveTokenField({
 function RemoveFormStatus({
   error,
   insufficientBalance,
+  complianceLoading,
+  complianceMessage,
   txSuccess,
 }: {
   error: string
   insufficientBalance: boolean
+  complianceLoading: boolean
+  complianceMessage: string
   txSuccess: boolean
 }) {
   if (error) {
@@ -639,6 +751,14 @@ function RemoveFormStatus({
 
   if (insufficientBalance) {
     return <p className="status error">Exceeds pooled balance.</p>
+  }
+
+  if (complianceMessage) {
+    return <p className="status error">{complianceMessage}</p>
+  }
+
+  if (complianceLoading) {
+    return <p className="status">Checking APass compliance...</p>
   }
 
   if (txSuccess) {
@@ -668,9 +788,44 @@ function formatOutput(amount: bigint, token: TokenInfo) {
   return `${formatUnits(amount, token.decimals)} ${token.symbol}`
 }
 
+function createRemoveLiquidityFlowSteps(needsApproval: boolean) {
+  const steps: TransactionFlowStep[] = []
+
+  if (needsApproval) {
+    steps.push({
+      id: "approve-lp",
+      label: "Approve LP token",
+      description: "Grant the router permission to burn your LP tokens.",
+      status: "pending",
+    })
+  }
+
+  steps.push({
+    id: "remove",
+    label: "Remove liquidity",
+    description: "Burn LP tokens and withdraw the underlying assets.",
+    status: "pending",
+  })
+
+  return steps
+}
+
 function getReadableError(error: unknown) {
   if (error instanceof Error) {
-    return error.message
+    const message = error.message
+    const normalizedMessage = message.toLowerCase()
+
+    if (
+      normalizedMessage.includes("user rejected") ||
+      normalizedMessage.includes("user denied")
+    ) {
+      return "Transaction rejected in wallet."
+    }
+
+    return (
+      message.split(/\n| Request Arguments:| Contract Call:| Details:/)[0] ||
+      "Transaction failed."
+    )
   }
 
   return "Transaction failed."

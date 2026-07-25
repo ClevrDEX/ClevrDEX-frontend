@@ -3,6 +3,7 @@
 import { useEffect } from "react"
 import { createPortal } from "react-dom"
 
+import { CloseIcon } from "@/components/CloseIcon"
 import {
   blockDecimalInput,
   blockIntegerInput,
@@ -74,7 +75,7 @@ export function TransactionSettingsModal({
             aria-label="Close settings"
             onClick={onClose}
           >
-            ×
+            <CloseIcon />
           </button>
         </div>
 

@@ -9,11 +9,11 @@ import {
   useChainId,
   usePublicClient,
   useReadContract,
-  useWaitForTransactionReceipt,
   useWriteContract,
 } from "wagmi"
 
 import { getDexDeployment, type TokenInfo } from "@/chains/deployments"
+import { useTradeCompliance } from "@/compliance/useTradeCompliance"
 import { erc20Abi } from "@/dex/v2/abi/erc20"
 import { v2FactoryAbi } from "@/dex/v2/abi/factory"
 import { v2PairAbi } from "@/dex/v2/abi/pair"
@@ -25,6 +25,12 @@ import {
 } from "@/features/forms/numericInput"
 import { SwapCardHeader } from "@/features/forms/SwapCardHeader"
 import { TransactionSettingsModal } from "@/features/forms/TransactionSettingsModal"
+import {
+  TransactionFlowModal,
+  type TransactionFlowStep,
+  updateFlowStep,
+  waitForAllowance,
+} from "@/features/forms/TransactionFlowModal"
 import { TokenSelect } from "@/features/tokens/TokenSelect"
 import {
   formatTokenBalance,
@@ -35,10 +41,7 @@ export function LiquidityCard() {
   const chainId = useChainId()
   const { address } = useAccount()
   const publicClient = usePublicClient()
-  const { writeContractAsync, data: hash, isPending } = useWriteContract()
-  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
-    hash,
-  })
+  const { writeContractAsync, isPending } = useWriteContract()
 
   const deployment = getDexDeployment(chainId)
   const listedTokens = deployment?.tokenList ?? []
@@ -68,6 +71,11 @@ export function LiquidityCard() {
   const [deadline, setDeadline] = useState("20")
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [error, setError] = useState("")
+  const [txSuccess, setTxSuccess] = useState(false)
+  const [flowOpen, setFlowOpen] = useState(false)
+  const [flowRunning, setFlowRunning] = useState(false)
+  const [flowError, setFlowError] = useState("")
+  const [flowSteps, setFlowSteps] = useState<TransactionFlowStep[]>([])
 
   const tokenA = tokens.find((token) => token.address === tokenAAddress)
   const tokenB = tokens.find((token) => token.address === tokenBAddress)
@@ -187,6 +195,35 @@ export function LiquidityCard() {
   const allowanceB = allowanceBQuery.data ?? 0n
   const balanceA = balanceAQuery.data ?? 0n
   const balanceB = balanceBQuery.data ?? 0n
+  const complianceQuery = useTradeCompliance({
+    address,
+    deployment,
+    publicClient,
+    enabled:
+      Boolean(address) &&
+      Boolean(deployment) &&
+      Boolean(tokenA) &&
+      Boolean(tokenB) &&
+      !sameToken,
+    poolPairs: tokenA && tokenB ? [[tokenA.address, tokenB.address]] : [],
+    tokenChecks:
+      tokenA && tokenB
+        ? [
+            {
+              token: tokenA.address,
+              symbol: tokenA.symbol,
+              amount: parsedAmountA,
+              direction: "in",
+            },
+            {
+              token: tokenB.address,
+              symbol: tokenB.symbol,
+              amount: parsedAmountB,
+              direction: "in",
+            },
+          ]
+        : [],
+  })
   const insufficientBalanceA =
     parsedAmountA > 0n && Boolean(address) && parsedAmountA > balanceA
   const insufficientBalanceB =
@@ -194,6 +231,21 @@ export function LiquidityCard() {
   const insufficientBalance = insufficientBalanceA || insufficientBalanceB
   const needsApprovalA = parsedAmountA > 0n && allowanceA < parsedAmountA
   const needsApprovalB = parsedAmountB > 0n && allowanceB < parsedAmountB
+  const complianceMessage =
+    complianceQuery.data && !complianceQuery.data.allowed
+      ? complianceQuery.data.message
+      : ""
+  const complianceAction =
+    complianceQuery.data && "action" in complianceQuery.data
+      ? complianceQuery.data.action
+      : undefined
+  const complianceInitialChecking =
+    Boolean(tokenA) &&
+    Boolean(tokenB) &&
+    !sameToken &&
+    (complianceQuery.isLoading ||
+      (complianceQuery.isFetching && !complianceQuery.data))
+  const complianceBlocked = complianceInitialChecking || Boolean(complianceMessage)
   const actionDisabled =
     !address ||
     !deployment ||
@@ -204,36 +256,19 @@ export function LiquidityCard() {
     parsedAmountA <= 0n ||
     parsedAmountB <= 0n ||
     insufficientBalance ||
+    complianceBlocked ||
     isPending ||
-    isConfirming
+    flowRunning
 
-  async function approveToken(token: TokenInfo, amount: bigint) {
+  async function executeAddLiquidityFlow() {
     setError("")
-
-    if (!deployment || amount <= 0n) {
-      return
-    }
-
-    try {
-      await writeContractAsync({
-        address: token.address,
-        abi: erc20Abi,
-        functionName: "approve",
-        args: [deployment.router, amount],
-      })
-
-      await Promise.all([allowanceAQuery.refetch(), allowanceBQuery.refetch()])
-    } catch (err) {
-      setError(getReadableError(err))
-    }
-  }
-
-  async function addLiquidity() {
-    setError("")
+    setFlowError("")
+    setTxSuccess(false)
 
     if (
       !address ||
       !deployment ||
+      !publicClient ||
       !tokenA ||
       !tokenB ||
       sameToken ||
@@ -243,8 +278,72 @@ export function LiquidityCard() {
       return
     }
 
+    const nextSteps = createAddLiquidityFlowSteps(
+      needsApprovalA ? tokenA.symbol : undefined,
+      needsApprovalB ? tokenB.symbol : undefined,
+    )
+    let currentStepId = nextSteps[0]?.id ?? ""
+
+    setFlowSteps(nextSteps)
+    setFlowOpen(true)
+    setFlowRunning(true)
+
     try {
-      await writeContractAsync({
+      if (needsApprovalA) {
+        currentStepId = "approve-a"
+        updateFlowStep(setFlowSteps, currentStepId, { status: "active" })
+        const approveHash = await writeContractAsync({
+          address: tokenA.address,
+          abi: erc20Abi,
+          functionName: "approve",
+          args: [deployment.router, parsedAmountA],
+        })
+
+        updateFlowStep(setFlowSteps, currentStepId, {
+          status: "confirming",
+          hash: approveHash,
+          description:
+            "Approval submitted. Waiting for the token allowance to update.",
+        })
+        const approveReceipt = await publicClient.waitForTransactionReceipt({
+          hash: approveHash,
+        })
+        if (approveReceipt.status !== "success") {
+          throw new Error("Approval transaction reverted.")
+        }
+        await waitForAllowance(() => allowanceAQuery.refetch(), parsedAmountA)
+        updateFlowStep(setFlowSteps, currentStepId, { status: "success" })
+      }
+
+      if (needsApprovalB) {
+        currentStepId = "approve-b"
+        updateFlowStep(setFlowSteps, currentStepId, { status: "active" })
+        const approveHash = await writeContractAsync({
+          address: tokenB.address,
+          abi: erc20Abi,
+          functionName: "approve",
+          args: [deployment.router, parsedAmountB],
+        })
+
+        updateFlowStep(setFlowSteps, currentStepId, {
+          status: "confirming",
+          hash: approveHash,
+          description:
+            "Approval submitted. Waiting for the token allowance to update.",
+        })
+        const approveReceipt = await publicClient.waitForTransactionReceipt({
+          hash: approveHash,
+        })
+        if (approveReceipt.status !== "success") {
+          throw new Error("Approval transaction reverted.")
+        }
+        await waitForAllowance(() => allowanceBQuery.refetch(), parsedAmountB)
+        updateFlowStep(setFlowSteps, currentStepId, { status: "success" })
+      }
+
+      currentStepId = "add"
+      updateFlowStep(setFlowSteps, currentStepId, { status: "active" })
+      const addHash = await writeContractAsync({
         address: deployment.router,
         abi: v2RouterAbi,
         functionName: "addLiquidity",
@@ -259,8 +358,36 @@ export function LiquidityCard() {
           getDeadline(deadlineMinutes),
         ],
       })
+
+      updateFlowStep(setFlowSteps, currentStepId, {
+        status: "confirming",
+        hash: addHash,
+        description:
+          "Liquidity transaction submitted. You can close this window while it confirms on-chain.",
+      })
+      const addReceipt = await publicClient.waitForTransactionReceipt({
+        hash: addHash,
+      })
+      if (addReceipt.status !== "success") {
+        throw new Error("Add liquidity transaction reverted.")
+      }
+      updateFlowStep(setFlowSteps, currentStepId, { status: "success" })
+      setTxSuccess(true)
+      await Promise.all([
+        allowanceAQuery.refetch(),
+        allowanceBQuery.refetch(),
+        balanceAQuery.refetch(),
+        balanceBQuery.refetch(),
+        pairQuery.refetch(),
+        reservesQuery.refetch(),
+      ])
     } catch (err) {
-      setError(getReadableError(err))
+      const message = getReadableError(err)
+      setError(message)
+      setFlowError(message)
+      updateFlowStep(setFlowSteps, currentStepId, { status: "error" })
+    } finally {
+      setFlowRunning(false)
     }
   }
 
@@ -428,32 +555,34 @@ export function LiquidityCard() {
         </div>
       </div>
 
-      {needsApprovalA && tokenA ? (
-        <button
-          className="primary-button"
-          disabled={actionDisabled}
-          type="button"
-          onClick={() => approveToken(tokenA, parsedAmountA)}
-        >
-          {isPending ? "Approving..." : `Approve ${tokenA.symbol}`}
-        </button>
-      ) : needsApprovalB && tokenB ? (
-        <button
-          className="primary-button"
-          disabled={actionDisabled}
-          type="button"
-          onClick={() => approveToken(tokenB, parsedAmountB)}
-        >
-          {isPending ? "Approving..." : `Approve ${tokenB.symbol}`}
-        </button>
+      {complianceBlocked ? (
+        complianceAction ? (
+          <a
+            className="primary-button compliance-action-button"
+            href={complianceAction.href}
+            rel="noreferrer"
+            target="_blank"
+          >
+            <span>{complianceAction.label}</span>
+            <small>{complianceMessage}</small>
+          </a>
+        ) : (
+          <button className="primary-button" disabled type="button">
+            {complianceMessage || "Checking APass compliance..."}
+          </button>
+        )
       ) : (
         <button
           className="primary-button"
           disabled={actionDisabled}
           type="button"
-          onClick={addLiquidity}
+          onClick={executeAddLiquidityFlow}
         >
-          {isPending || isConfirming ? "Adding..." : "Add Liquidity"}
+          {flowRunning || isPending
+            ? "Processing..."
+            : needsApprovalA || needsApprovalB
+              ? "Approve and Add Liquidity"
+              : "Add Liquidity"}
         </button>
       )}
 
@@ -461,7 +590,9 @@ export function LiquidityCard() {
         deploymentReady={Boolean(deployment && deployment.router !== zeroAddress)}
         sameToken={sameToken}
         insufficientBalance={insufficientBalance}
-        txSuccess={isSuccess}
+        complianceLoading={false}
+        complianceMessage=""
+        txSuccess={txSuccess}
         error={error}
       />
 
@@ -474,6 +605,15 @@ export function LiquidityCard() {
         onSlippageChange={setSlippage}
         onDeadlineChange={setDeadline}
         onClose={() => setSettingsOpen(false)}
+      />
+
+      <TransactionFlowModal
+        open={flowOpen}
+        title="Add liquidity progress"
+        description="Approve required tokens first, then add liquidity."
+        steps={flowSteps}
+        error={flowError}
+        onClose={() => setFlowOpen(false)}
       />
     </section>
   )
@@ -523,12 +663,16 @@ function LiquidityStatus({
   deploymentReady,
   sameToken,
   insufficientBalance,
+  complianceLoading,
+  complianceMessage,
   txSuccess,
   error,
 }: {
   deploymentReady: boolean
   sameToken: boolean
   insufficientBalance: boolean
+  complianceLoading: boolean
+  complianceMessage: string
   txSuccess: boolean
   error: string
 }) {
@@ -550,6 +694,14 @@ function LiquidityStatus({
 
   if (insufficientBalance) {
     return <p className="status error">Insufficient balance.</p>
+  }
+
+  if (complianceMessage) {
+    return <p className="status error">{complianceMessage}</p>
+  }
+
+  if (complianceLoading) {
+    return <p className="status">Checking APass compliance...</p>
   }
 
   if (txSuccess) {
@@ -579,6 +731,37 @@ function formatMinimum(amount: bigint, token?: TokenInfo) {
   return `${formatUnits(amount, token.decimals)} ${token.symbol}`
 }
 
+function createAddLiquidityFlowSteps(tokenASymbol?: string, tokenBSymbol?: string) {
+  const steps: TransactionFlowStep[] = []
+
+  if (tokenASymbol) {
+    steps.push({
+      id: "approve-a",
+      label: `Approve ${tokenASymbol}`,
+      description: "Grant the router permission to spend the first token.",
+      status: "pending",
+    })
+  }
+
+  if (tokenBSymbol) {
+    steps.push({
+      id: "approve-b",
+      label: `Approve ${tokenBSymbol}`,
+      description: "Grant the router permission to spend the second token.",
+      status: "pending",
+    })
+  }
+
+  steps.push({
+    id: "add",
+    label: "Add liquidity",
+    description: "Deposit both tokens after approvals are ready.",
+    status: "pending",
+  })
+
+  return steps
+}
+
 function isSameAddress(
   firstAddress: `0x${string}` | "",
   secondAddress: `0x${string}` | "",
@@ -603,7 +786,20 @@ function getFallbackTokenAddress(
 
 function getReadableError(error: unknown) {
   if (error instanceof Error) {
-    return error.message
+    const message = error.message
+    const normalizedMessage = message.toLowerCase()
+
+    if (
+      normalizedMessage.includes("user rejected") ||
+      normalizedMessage.includes("user denied")
+    ) {
+      return "Transaction rejected in wallet."
+    }
+
+    return (
+      message.split(/\n| Request Arguments:| Contract Call:| Details:/)[0] ||
+      "Transaction failed."
+    )
   }
 
   return "Transaction failed."

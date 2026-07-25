@@ -6,6 +6,7 @@ import { getAddress, isAddress } from "viem"
 import type { usePublicClient } from "wagmi"
 
 import type { TokenInfo } from "@/chains/deployments"
+import { CloseIcon } from "@/components/CloseIcon"
 import { erc20Abi } from "@/dex/v2/abi/erc20"
 import {
   formatTokenBalance,
@@ -157,7 +158,7 @@ export function TokenSelect({
                     aria-label="Close token selector"
                     onClick={() => setOpen(false)}
                   >
-                    ×
+                    <CloseIcon />
                   </button>
                 </div>
                 <input

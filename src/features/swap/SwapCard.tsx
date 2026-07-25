@@ -8,7 +8,6 @@ import {
   useChainId,
   usePublicClient,
   useReadContract,
-  useWaitForTransactionReceipt,
   useWriteContract,
 } from "wagmi"
 
@@ -28,15 +27,19 @@ import {
   useTokenBalance,
 } from "@/features/tokens/useTokenBalance"
 import { TransactionSettingsModal } from "@/features/forms/TransactionSettingsModal"
+import {
+  TransactionFlowModal,
+  type TransactionFlowStep,
+  updateFlowStep,
+  waitForAllowance,
+} from "@/features/forms/TransactionFlowModal"
+import { useTradeCompliance } from "@/compliance/useTradeCompliance"
 
 export function SwapCard() {
   const chainId = useChainId()
   const { address } = useAccount()
   const publicClient = usePublicClient()
-  const { writeContractAsync, data: hash, isPending } = useWriteContract()
-  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
-    hash,
-  })
+  const { writeContractAsync, isPending } = useWriteContract()
 
   const deployment = getDexDeployment(chainId)
   const listedTokens = deployment?.tokenList ?? []
@@ -65,6 +68,11 @@ export function SwapCard() {
   const [deadline, setDeadline] = useState("20")
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [error, setError] = useState("")
+  const [txSuccess, setTxSuccess] = useState(false)
+  const [flowOpen, setFlowOpen] = useState(false)
+  const [flowRunning, setFlowRunning] = useState(false)
+  const [flowError, setFlowError] = useState("")
+  const [flowSteps, setFlowSteps] = useState<TransactionFlowStep[]>([])
 
   const tokenIn = tokens.find((token) => token.address === tokenInAddress)
   const tokenOut = tokens.find((token) => token.address === tokenOutAddress)
@@ -156,9 +164,51 @@ export function SwapCard() {
   const minimumReceived = applySlippage(amountOut, slippageBps)
   const allowance = allowanceQuery.data ?? 0n
   const balanceIn = balanceInQuery.data ?? 0n
+  const compliancePath = useMemo(() => {
+    if (bestQuote) {
+      return bestQuote.path
+    }
+
+    if (tokenIn && tokenOut && !isSameAddress(tokenIn.address, tokenOut.address)) {
+      return [tokenIn.address, tokenOut.address]
+    }
+
+    return []
+  }, [bestQuote, tokenIn, tokenOut])
+  const complianceQuery = useTradeCompliance({
+    address,
+    deployment,
+    publicClient,
+    enabled:
+      Boolean(address) &&
+      Boolean(deployment) &&
+      Boolean(tokenIn) &&
+      Boolean(tokenOut) &&
+      compliancePath.length >= 2,
+    poolPairs: getPathPairs(compliancePath),
+    tokenChecks: compliancePath.map((tokenAddress, index) => ({
+          token: tokenAddress,
+          symbol: getTokenSymbol(tokens, tokenAddress),
+      amount: bestQuote?.amounts[index] ?? 0n,
+          direction: index === 0 ? "in" : "out",
+    })),
+  })
   const insufficientBalance =
     parsedAmountIn > 0n && Boolean(address) && parsedAmountIn > balanceIn
   const needsApproval = parsedAmountIn > 0n && allowance < parsedAmountIn
+  const complianceMessage =
+    complianceQuery.data && !complianceQuery.data.allowed
+      ? complianceQuery.data.message
+      : ""
+  const complianceAction =
+    complianceQuery.data && "action" in complianceQuery.data
+      ? complianceQuery.data.action
+      : undefined
+  const complianceInitialChecking =
+    compliancePath.length >= 2 &&
+    (complianceQuery.isLoading ||
+      (complianceQuery.isFetching && !complianceQuery.data))
+  const complianceBlocked = complianceInitialChecking || Boolean(complianceMessage)
   const swapDisabled =
     !address ||
     !deployment ||
@@ -168,48 +218,63 @@ export function SwapCard() {
     !bestQuote ||
     parsedAmountIn <= 0n ||
     insufficientBalance ||
+    complianceBlocked ||
     isPending ||
-    isConfirming
-  const approveDisabled =
-    !address ||
-    !deployment ||
-    deployment.router === zeroAddress ||
-    !tokenIn ||
-    parsedAmountIn <= 0n ||
-    insufficientBalance ||
-    isPending ||
-    isConfirming
+    flowRunning
 
-  async function approve() {
+  async function executeSwapFlow() {
     setError("")
+    setFlowError("")
+    setTxSuccess(false)
 
-    if (!deployment || !tokenIn || parsedAmountIn <= 0n) {
+    if (
+      !address ||
+      !deployment ||
+      !publicClient ||
+      !tokenIn ||
+      !bestQuote ||
+      parsedAmountIn <= 0n
+    ) {
       return
     }
 
-    try {
-      await writeContractAsync({
-        address: tokenIn.address,
-        abi: erc20Abi,
-        functionName: "approve",
-        args: [deployment.router, parsedAmountIn],
-      })
+    const nextSteps = createSwapFlowSteps(needsApproval, tokenIn.symbol)
+    let currentStepId = nextSteps[0]?.id ?? ""
 
-      await allowanceQuery.refetch()
-    } catch (err) {
-      setError(getReadableError(err))
-    }
-  }
-
-  async function swap() {
-    setError("")
-
-    if (!address || !deployment || !bestQuote || parsedAmountIn <= 0n) {
-      return
-    }
+    setFlowSteps(nextSteps)
+    setFlowOpen(true)
+    setFlowRunning(true)
 
     try {
-      await writeContractAsync({
+      if (needsApproval) {
+        currentStepId = "approve"
+        updateFlowStep(setFlowSteps, currentStepId, { status: "active" })
+        const approveHash = await writeContractAsync({
+          address: tokenIn.address,
+          abi: erc20Abi,
+          functionName: "approve",
+          args: [deployment.router, parsedAmountIn],
+        })
+
+        updateFlowStep(setFlowSteps, currentStepId, {
+          status: "confirming",
+          hash: approveHash,
+          description:
+            "Approve submitted. Waiting for the approval to confirm on-chain.",
+        })
+        const approveReceipt = await publicClient.waitForTransactionReceipt({
+          hash: approveHash,
+        })
+        if (approveReceipt.status !== "success") {
+          throw new Error("Approval transaction reverted.")
+        }
+        await waitForAllowance(() => allowanceQuery.refetch(), parsedAmountIn)
+        updateFlowStep(setFlowSteps, currentStepId, { status: "success" })
+      }
+
+      currentStepId = "swap"
+      updateFlowStep(setFlowSteps, currentStepId, { status: "active" })
+      const swapHash = await writeContractAsync({
         address: deployment.router,
         abi: v2RouterAbi,
         functionName: "swapExactTokensForTokens",
@@ -221,8 +286,29 @@ export function SwapCard() {
           getDeadline(deadlineMinutes),
         ],
       })
+
+      updateFlowStep(setFlowSteps, currentStepId, {
+        status: "confirming",
+        hash: swapHash,
+        description:
+          "Swap submitted. You can close this window while it confirms on-chain.",
+      })
+      const swapReceipt = await publicClient.waitForTransactionReceipt({
+        hash: swapHash,
+      })
+      if (swapReceipt.status !== "success") {
+        throw new Error("Swap transaction reverted.")
+      }
+      updateFlowStep(setFlowSteps, currentStepId, { status: "success" })
+      setTxSuccess(true)
+      await Promise.all([allowanceQuery.refetch(), balanceInQuery.refetch()])
     } catch (err) {
-      setError(getReadableError(err))
+      const message = getReadableError(err)
+      setError(message)
+      setFlowError(message)
+      updateFlowStep(setFlowSteps, currentStepId, { status: "error" })
+    } finally {
+      setFlowRunning(false)
     }
   }
 
@@ -372,23 +458,34 @@ export function SwapCard() {
         </div>
       </div>
 
-      {needsApproval ? (
-        <button
-          className="primary-button"
-          disabled={approveDisabled}
-          type="button"
-          onClick={approve}
-        >
-          {isPending ? "Approving..." : `Approve ${tokenIn?.symbol ?? ""}`}
-        </button>
+      {complianceBlocked ? (
+        complianceAction ? (
+          <a
+            className="primary-button compliance-action-button"
+            href={complianceAction.href}
+            rel="noreferrer"
+            target="_blank"
+          >
+            <span>{complianceAction.label}</span>
+            <small>{complianceMessage}</small>
+          </a>
+        ) : (
+          <button className="primary-button" disabled type="button">
+            {complianceMessage || "Checking APass compliance..."}
+          </button>
+        )
       ) : (
         <button
           className="primary-button"
           disabled={swapDisabled}
           type="button"
-          onClick={swap}
+          onClick={executeSwapFlow}
         >
-          {isPending || isConfirming ? "Swapping..." : "Swap"}
+          {flowRunning || isPending
+            ? "Processing..."
+            : needsApproval
+              ? `Approve ${tokenIn?.symbol ?? ""} and Swap`
+              : "Swap"}
         </button>
       )}
 
@@ -397,7 +494,9 @@ export function SwapCard() {
         quoteLoading={quoteQuery.isFetching}
         quoteError={quoteQuery.isError}
         insufficientBalance={insufficientBalance}
-        txSuccess={isSuccess}
+        complianceLoading={false}
+        complianceMessage=""
+        txSuccess={txSuccess}
         error={error}
       />
 
@@ -411,6 +510,15 @@ export function SwapCard() {
         onDeadlineChange={setDeadline}
         onClose={() => setSettingsOpen(false)}
       />
+
+      <TransactionFlowModal
+        open={flowOpen}
+        title="Swap progress"
+        description="Approve first if needed, then execute the swap."
+        steps={flowSteps}
+        error={flowError}
+        onClose={() => setFlowOpen(false)}
+      />
     </section>
   )
 }
@@ -420,6 +528,8 @@ function Status({
   quoteLoading,
   quoteError,
   insufficientBalance,
+  complianceLoading,
+  complianceMessage,
   txSuccess,
   error,
 }: {
@@ -427,6 +537,8 @@ function Status({
   quoteLoading: boolean
   quoteError: boolean
   insufficientBalance: boolean
+  complianceLoading: boolean
+  complianceMessage: string
   txSuccess: boolean
   error: string
 }) {
@@ -444,6 +556,14 @@ function Status({
 
   if (insufficientBalance) {
     return <p className="status error">Insufficient balance.</p>
+  }
+
+  if (complianceMessage) {
+    return <p className="status error">{complianceMessage}</p>
+  }
+
+  if (complianceLoading) {
+    return <p className="status">Checking APass compliance...</p>
   }
 
   if (quoteLoading) {
@@ -483,9 +603,62 @@ function getFallbackTokenAddress(
   )
 }
 
+function getPathPairs(path: `0x${string}`[]) {
+  const pairs: [`0x${string}`, `0x${string}`][] = []
+
+  for (let index = 0; index < path.length - 1; index += 1) {
+    pairs.push([path[index], path[index + 1]])
+  }
+
+  return pairs
+}
+
+function createSwapFlowSteps(needsApproval: boolean, tokenSymbol: string) {
+  const steps: TransactionFlowStep[] = []
+
+  if (needsApproval) {
+    steps.push({
+      id: "approve",
+      label: `Approve ${tokenSymbol}`,
+      description: "Grant the router permission to spend the input token.",
+      status: "pending",
+    })
+  }
+
+  steps.push({
+    id: "swap",
+    label: "Swap",
+    description: "Execute the swap after approval is ready.",
+    status: "pending",
+  })
+
+  return steps
+}
+
+function getTokenSymbol(tokens: TokenInfo[], tokenAddress: `0x${string}`) {
+  return (
+    tokens.find(
+      (token) => token.address.toLowerCase() === tokenAddress.toLowerCase(),
+    )?.symbol ?? "token"
+  )
+}
+
 function getReadableError(error: unknown) {
   if (error instanceof Error) {
-    return error.message
+    const message = error.message
+    const normalizedMessage = message.toLowerCase()
+
+    if (
+      normalizedMessage.includes("user rejected") ||
+      normalizedMessage.includes("user denied")
+    ) {
+      return "Transaction rejected in wallet."
+    }
+
+    return (
+      message.split(/\n| Request Arguments:| Contract Call:| Details:/)[0] ||
+      "Transaction failed."
+    )
   }
 
   return "Transaction failed."
