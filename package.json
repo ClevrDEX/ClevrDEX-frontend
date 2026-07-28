@@ -2,10 +2,13 @@
   "name": "clean-dex-frontend",
   "version": "0.1.0",
   "private": true,
+  "packageManager": "pnpm@11.6.0",
   "scripts": {
     "dev": "next dev -p 5003",
     "build": "next build",
-    "start": "next start",
+    "start": "next start -p 5003",
+    "restart": "pm2 startOrRestart ecosystem.config.cjs --update-env",
+    "build:restart": "pnpm build && pnpm restart",
     "lint": "next lint",
     "typecheck": "tsc --noEmit"
   },

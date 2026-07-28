@@ -540,7 +540,7 @@ https://assets.example.com/tokenlist.json
 
 ```json
 {
-  "name": "Clean DEX Token List",
+  "name": "Verified DEX Token List",
   "timestamp": "2026-06-12T00:00:00Z",
   "version": {
     "major": 1,

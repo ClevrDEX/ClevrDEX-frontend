@@ -1,6 +1,6 @@
-# CleanDEX Frontend
+# Verified DEX Frontend
 
-CleanDEX is an APass Compliance frontend for configurable V2-style contract deployments.
+Verified DEX is an APass Compliance frontend for configurable V2-style contract deployments.
 
 ## Current Scope
 
@@ -41,7 +41,16 @@ The current app focuses on ERC20 to ERC20 swaps through configured deployments.
 ## Commands
 
 ```bash
-npm install
-npm run dev
-npm run typecheck
+pnpm install
+pnpm dev
+pnpm typecheck
+pnpm build
 ```
+
+## Docker Deploy
+
+```bash
+docker compose up -d --build
+```
+
+The app is exposed on `http://localhost:5003`.

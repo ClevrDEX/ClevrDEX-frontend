@@ -1,0 +1,11 @@
+services:
+  clean-dex-frontend:
+    build:
+      context: .
+    image: clean-dex-frontend:latest
+    ports:
+      - "5003:5003"
+    environment:
+      NODE_ENV: production
+      PORT: 5003
+    restart: unless-stopped
