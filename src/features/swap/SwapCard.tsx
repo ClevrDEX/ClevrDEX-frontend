@@ -34,6 +34,7 @@ import {
   waitForAllowance,
 } from "@/features/forms/TransactionFlowModal"
 import { useTradeCompliance } from "@/compliance/useTradeCompliance"
+import { saveTransactionHistoryEntry } from "@/features/transactions/transactionHistory"
 
 export function SwapCard() {
   const chainId = useChainId()
@@ -300,6 +301,16 @@ export function SwapCard() {
         throw new Error("Swap transaction reverted.")
       }
       updateFlowStep(setFlowSteps, currentStepId, { status: "success" })
+      saveTransactionHistoryEntry({
+        kind: "swap",
+        chainId,
+        account: address,
+        hash: swapHash,
+        title: `${tokenIn.symbol} → ${tokenOut?.symbol ?? "Token"}`,
+        summary: `Swapped ${formatUnits(parsedAmountIn, tokenIn.decimals)} ${tokenIn.symbol} for ${formatUnits(amountOut, tokenOut?.decimals ?? 18)} ${tokenOut?.symbol ?? "Token"}.`,
+        primaryAmount: `${formatUnits(parsedAmountIn, tokenIn.decimals)} ${tokenIn.symbol}`,
+        secondaryAmount: `${formatUnits(amountOut, tokenOut?.decimals ?? 18)} ${tokenOut?.symbol ?? "Token"}`,
+      })
       setTxSuccess(true)
       await Promise.all([allowanceQuery.refetch(), balanceInQuery.refetch()])
     } catch (err) {
@@ -361,7 +372,7 @@ export function SwapCard() {
   return (
     <section className="swap-card">
       <SwapCardHeader
-        kicker="APass router"
+        kicker="A-Pass router"
         title="Compliance Swap"
         settingsLabel="Swap settings"
         onSettingsClick={() => setSettingsOpen(true)}
@@ -471,7 +482,7 @@ export function SwapCard() {
           </a>
         ) : (
           <button className="primary-button" disabled type="button">
-            {complianceMessage || "Checking APass compliance..."}
+            {complianceMessage || "Checking A-Pass compliance..."}
           </button>
         )
       ) : (
@@ -549,7 +560,7 @@ function Status({
   if (!deploymentReady) {
     return (
       <p className="status">
-        Configure the APass router in <code>src/chains/deployments.ts</code>.
+        Configure the A-Pass router in <code>src/chains/deployments.ts</code>.
       </p>
     )
   }
@@ -563,7 +574,7 @@ function Status({
   }
 
   if (complianceLoading) {
-    return <p className="status">Checking APass compliance...</p>
+    return <p className="status">Checking A-Pass compliance...</p>
   }
 
   if (quoteLoading) {
@@ -575,7 +586,12 @@ function Status({
   }
 
   if (txSuccess) {
-    return <p className="status">Transaction confirmed.</p>
+    return (
+      <p className="status success">
+        <strong>Transaction confirmed.</strong>
+        <span>Your swap was saved to local transaction history.</span>
+      </p>
+    )
   }
 
   return <p className="status">Compliance-ready ERC20 swap route is active.</p>

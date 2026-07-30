@@ -76,16 +76,16 @@ export function useTradeCompliance({
       } catch {
         return {
           allowed: false,
-          message: "Unable to read APass contract. Check APass deployment.",
+          message: "Unable to read A-Pass contract. Check A-Pass deployment.",
         }
       }
 
       if (!hasAPass) {
         return {
           allowed: false,
-          message: "Trader must hold an APass.",
+          message: "Trader must hold an A-Pass.",
           action: {
-            label: "Get APass",
+            label: "Get A-Pass",
             href: getAPassUrl(deployment),
           },
         }
@@ -102,14 +102,14 @@ export function useTradeCompliance({
       } catch {
         return {
           allowed: false,
-          message: "Unable to verify APass status. Check APass deployment.",
+          message: "Unable to verify A-Pass status. Check A-Pass deployment.",
         }
       }
 
       if (!validAPass) {
         return {
           allowed: false,
-          message: "Trader APass is not active or expired.",
+          message: "Trader A-Pass is not active or expired.",
         }
       }
 
@@ -126,7 +126,7 @@ export function useTradeCompliance({
         } catch {
           return {
             allowed: false,
-            message: `Unable to read ${check.symbol} token policy. Check ATokenPolicy deployment.`,
+            message: `Unable to read ${check.symbol} token policy. Check A-Token policy deployment.`,
           }
         }
 
@@ -149,7 +149,7 @@ export function useTradeCompliance({
             allowed: false,
             message: getComplianceErrorMessage(
               error,
-              `Trader APass does not meet ${check.symbol} policy requirements.`,
+              `Trader A-Pass does not meet ${check.symbol} policy requirements.`,
             ),
           }
         }
@@ -212,7 +212,7 @@ export function useTradeCompliance({
           if (!isCompliant) {
             return {
               allowed: false,
-              message: "Trader APass does not meet this pair's compliance rules.",
+              message: "Trader A-Pass does not meet this pair's compliance rules.",
             }
           }
         } catch (error) {
@@ -220,7 +220,7 @@ export function useTradeCompliance({
             allowed: false,
             message: getComplianceErrorMessage(
               error,
-              "Trader APass does not meet this pair's compliance rules.",
+              "Trader A-Pass does not meet this pair's compliance rules.",
             ),
           }
         }
@@ -242,25 +242,25 @@ function getComplianceErrorMessage(error: unknown, fallback: string) {
         : ""
 
   if (message.includes("NoAPass")) {
-    return "Trader must hold an APass."
+    return "Trader must hold an A-Pass."
   }
   if (message.includes("APassNotActive")) {
-    return "Trader APass is not active."
+    return "Trader A-Pass is not active."
   }
   if (message.includes("APassExpired")) {
-    return "Trader APass is expired."
+    return "Trader A-Pass is expired."
   }
   if (message.includes("TierTooLow")) {
-    return "Trader APass tier is too low for this compliance rule."
+    return "Trader A-Pass tier is too low for this compliance rule."
   }
   if (message.includes("SubTierTooLow")) {
-    return "Trader APass sub-tier is too low for this compliance rule."
+    return "Trader A-Pass sub-tier is too low for this compliance rule."
   }
   if (message.includes("GroupMismatch")) {
-    return "Trader APass group does not match this compliance rule."
+    return "Trader A-Pass group does not match this compliance rule."
   }
   if (message.includes("SubGroupMismatch")) {
-    return "Trader APass sub-group does not match this compliance rule."
+    return "Trader A-Pass sub-group does not match this compliance rule."
   }
   if (message.includes("PoolIsPaused")) {
     return "This trading pair is paused by compliance policy."
@@ -275,7 +275,7 @@ function getComplianceErrorMessage(error: unknown, fallback: string) {
     return "This trading pair is not registered for compliance."
   }
   if (message.includes("TokenNotRegistered")) {
-    return "This token is not registered in ATokenPolicy."
+    return "This token is not registered in A-Token policy."
   }
 
   return fallback

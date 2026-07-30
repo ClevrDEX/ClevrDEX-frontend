@@ -36,6 +36,7 @@ import {
   formatTokenBalance,
   useTokenBalance,
 } from "@/features/tokens/useTokenBalance"
+import { saveTransactionHistoryEntry } from "@/features/transactions/transactionHistory"
 
 export function LiquidityCard() {
   const chainId = useChainId()
@@ -372,6 +373,16 @@ export function LiquidityCard() {
         throw new Error("Add liquidity transaction reverted.")
       }
       updateFlowStep(setFlowSteps, currentStepId, { status: "success" })
+      saveTransactionHistoryEntry({
+        kind: "add-liquidity",
+        chainId,
+        account: address,
+        hash: addHash,
+        title: `Add ${tokenA.symbol}/${tokenB.symbol}`,
+        summary: `Added ${formatUnits(parsedAmountA, tokenA.decimals)} ${tokenA.symbol} and ${formatUnits(parsedAmountB, tokenB.decimals)} ${tokenB.symbol}.`,
+        primaryAmount: `${formatUnits(parsedAmountA, tokenA.decimals)} ${tokenA.symbol}`,
+        secondaryAmount: `${formatUnits(parsedAmountB, tokenB.decimals)} ${tokenB.symbol}`,
+      })
       setTxSuccess(true)
       await Promise.all([
         allowanceAQuery.refetch(),
@@ -568,7 +579,7 @@ export function LiquidityCard() {
           </a>
         ) : (
           <button className="primary-button" disabled type="button">
-            {complianceMessage || "Checking APass compliance..."}
+            {complianceMessage || "Checking A-Pass compliance..."}
           </button>
         )
       ) : (
@@ -683,7 +694,7 @@ function LiquidityStatus({
   if (!deploymentReady) {
     return (
       <p className="status">
-        Configure the APass router in <code>src/chains/deployments.ts</code>.
+        Configure the A-Pass router in <code>src/chains/deployments.ts</code>.
       </p>
     )
   }
@@ -701,11 +712,16 @@ function LiquidityStatus({
   }
 
   if (complianceLoading) {
-    return <p className="status">Checking APass compliance...</p>
+    return <p className="status">Checking A-Pass compliance...</p>
   }
 
   if (txSuccess) {
-    return <p className="status">Liquidity transaction confirmed.</p>
+    return (
+      <p className="status success">
+        <strong>Liquidity added.</strong>
+        <span>The confirmed transaction was saved to local history.</span>
+      </p>
+    )
   }
 
   return <p className="status">Add ERC20 liquidity with slippage protection.</p>

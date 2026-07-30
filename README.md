@@ -1,6 +1,6 @@
 # Verified DEX Frontend
 
-Verified DEX is an APass Compliance frontend for configurable V2-style contract deployments.
+Verified DEX is an A-Pass Compliance frontend for configurable V2-style contract deployments.
 
 ## Current Scope
 

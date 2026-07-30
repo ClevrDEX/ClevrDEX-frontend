@@ -3,8 +3,10 @@
 import { useEffect } from "react"
 import type { Dispatch, SetStateAction } from "react"
 import { createPortal } from "react-dom"
+import { useChainId } from "wagmi"
 
 import { CloseIcon } from "@/components/CloseIcon"
+import { getTransactionExplorerUrl } from "@/chains/explorer"
 
 export type TransactionFlowStepStatus =
   | "pending"
@@ -48,6 +50,8 @@ export function TransactionFlowModal({
   error,
   onClose,
 }: TransactionFlowModalProps) {
+  const chainId = useChainId()
+
   useEffect(() => {
     if (!open) {
       return
@@ -111,7 +115,9 @@ export function TransactionFlowModal({
                     <span>{STEP_STATUS_LABELS[step.status]}</span>
                   </div>
                   <p>{step.description}</p>
-                  {step.hash ? <code>{shortHash(step.hash)}</code> : null}
+                  {step.hash ? (
+                    <TransactionHashLink chainId={chainId} hash={step.hash} />
+                  ) : null}
                 </div>
               </li>
             ))}
@@ -161,6 +167,31 @@ export async function waitForAllowance(
   }
 
   throw new Error("Approval confirmed, but allowance did not update in time.")
+}
+
+function TransactionHashLink({
+  chainId,
+  hash,
+}: {
+  chainId: number
+  hash: `0x${string}`
+}) {
+  const href = getTransactionExplorerUrl(chainId, hash)
+
+  if (!href) {
+    return <code>{shortHash(hash)}</code>
+  }
+
+  return (
+    <a
+      className="transaction-hash-link"
+      href={href}
+      rel="noreferrer"
+      target="_blank"
+    >
+      {shortHash(hash)}
+    </a>
+  )
 }
 
 function shortHash(hash: `0x${string}`) {

@@ -41,6 +41,7 @@ import {
   useLpPositions,
   type LpPosition,
 } from "@/features/liquidity/useLpPositions"
+import { saveTransactionHistoryEntry } from "@/features/transactions/transactionHistory"
 
 const LP_DECIMALS = 18
 const PERCENTAGE_PRESETS = [25, 50, 75, 100] as const
@@ -174,7 +175,7 @@ function PositionList({
   if (!deploymentReady) {
     return (
       <p className="status">
-        Configure the APass router in <code>src/chains/deployments.ts</code>.
+        Configure the A-Pass router in <code>src/chains/deployments.ts</code>.
       </p>
     )
   }
@@ -245,7 +246,8 @@ function RemovePositionForm({
   onComplete: () => void
 }) {
   const { address } = useAccount()
-  const deployment = getDexDeployment(useChainId())
+  const chainId = useChainId()
+  const deployment = getDexDeployment(chainId)
   const publicClient = usePublicClient()
   const { writeContractAsync, isPending } = useWriteContract()
 
@@ -498,6 +500,16 @@ function RemovePositionForm({
         throw new Error("Remove liquidity transaction reverted.")
       }
       updateFlowStep(setFlowSteps, currentStepId, { status: "success" })
+      saveTransactionHistoryEntry({
+        kind: "remove-liquidity",
+        chainId,
+        account: address,
+        hash: removeHash,
+        title: `Remove ${tokenA.symbol}/${tokenB.symbol}`,
+        summary: `Removed ${formatOutput(parsedAmount0, token0)} and ${formatOutput(parsedAmount1, token1)}.`,
+        primaryAmount: formatOutput(parsedAmount0, token0),
+        secondaryAmount: formatOutput(parsedAmount1, token1),
+      })
       setTxSuccess(true)
       await Promise.all([
         lpBalanceQuery.refetch(),
@@ -654,7 +666,7 @@ function RemovePositionForm({
               disabled
               type="button"
             >
-              {complianceMessage || "Checking APass compliance..."}
+              {complianceMessage || "Checking A-Pass compliance..."}
             </button>
           )
         ) : (
@@ -758,11 +770,16 @@ function RemoveFormStatus({
   }
 
   if (complianceLoading) {
-    return <p className="status">Checking APass compliance...</p>
+    return <p className="status">Checking A-Pass compliance...</p>
   }
 
   if (txSuccess) {
-    return <p className="status">Liquidity removal confirmed.</p>
+    return (
+      <p className="status success">
+        <strong>Liquidity removed.</strong>
+        <span>The confirmed transaction was saved to local history.</span>
+      </p>
+    )
   }
 
   return null

@@ -2,6 +2,7 @@
 
 import { SiteHeader } from "@/components/SiteHeader"
 import { SwapCard } from "@/features/swap/SwapCard"
+import { TransactionHistoryPanel } from "@/features/transactions/TransactionHistoryPanel"
 
 export default function SwapPage() {
   return (
@@ -10,6 +11,7 @@ export default function SwapPage() {
 
       <section className="action-page">
         <SwapCard />
+        <TransactionHistoryPanel />
       </section>
     </main>
   )

@@ -7,7 +7,7 @@ import { AppProviders } from "@/providers/AppProviders"
 
 export const metadata: Metadata = {
   title: "Verified DEX",
-  description: "APass Compliance decentralized exchange frontend",
+  description: "A-Pass Compliance decentralized exchange frontend",
   icons: {
     icon: "/favicon.svg",
     shortcut: "/favicon.svg",
