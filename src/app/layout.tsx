@@ -6,12 +6,13 @@ import type { Metadata } from "next"
 import { AppProviders } from "@/providers/AppProviders"
 
 export const metadata: Metadata = {
-  title: "Verified DEX",
-  description: "A-Pass Compliance decentralized exchange frontend",
+  title: "ClevrSwap",
+  description:
+    "ClevrSwap is a compliance-aware DEX built on Cleanverse for policy-aware swaps.",
   icons: {
-    icon: "/favicon.svg",
-    shortcut: "/favicon.svg",
-    apple: "/favicon.svg",
+    icon: "/cleanverse-logo-black.png",
+    shortcut: "/cleanverse-logo-black.png",
+    apple: "/cleanverse-logo-black.png",
   },
 }
 

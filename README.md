@@ -1,6 +1,6 @@
-# Verified DEX Frontend
+# ClevrSwap Frontend
 
-Verified DEX is an A-Pass Compliance frontend for configurable V2-style contract deployments.
+ClevrSwap is an A-Pass Compliance frontend for configurable V2-style contract deployments, built on Cleanverse.
 
 ## Current Scope
 

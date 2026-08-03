@@ -6,7 +6,7 @@ import { TransactionHistoryPanel } from "@/features/transactions/TransactionHist
 
 export default function AddLiquidityPage() {
   return (
-    <main className="page">
+    <main className="page app-page">
       <SiteHeader activeNav="liquidity" />
 
       <section className="action-page">

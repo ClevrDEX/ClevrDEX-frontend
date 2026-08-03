@@ -16,9 +16,19 @@ const NAV_ITEMS = [
   { id: "liquidity" as const, href: "/liquidity/add", label: "Liquidity" },
 ]
 
+const LANDING_NAV_ITEMS = [
+  { id: "product", href: "#product", label: "Product" },
+  { id: "how", href: "#how", label: "How it works" },
+  { id: "usecases", href: "#usecases", label: "Use cases" },
+  { id: "faq", href: "#faq", label: "FAQ" },
+]
+
 export function SiteHeader({ activeNav }: SiteHeaderProps) {
   const pathname = usePathname()
   const [menuOpen, setMenuOpen] = useState(false)
+  const navItems = activeNav === "home" ? LANDING_NAV_ITEMS : NAV_ITEMS
+  const isActiveNavItem = (itemId: string) =>
+    activeNav !== "home" && activeNav === itemId
 
   useEffect(() => {
     setMenuOpen(false)
@@ -47,23 +57,28 @@ export function SiteHeader({ activeNav }: SiteHeaderProps) {
   return (
     <header className={`header${menuOpen ? " header-menu-open" : ""}`}>
       <div className="brand">
-        <Link className="brand-logo-link" href="/" aria-label="Verified DEX home">
+        <Link className="brand-logo-link" href="/" aria-label="ClevrSwap home">
           <Image
             className="brand-logo"
-            src="/logo.svg"
-            alt="Verified DEX"
+            src="/cleanverse-logo-black.png"
+            alt=""
             width={48}
             height={48}
             priority
+            aria-hidden
           />
+          <span className="brand-copy">
+            <span className="brand-title">ClevrSwap</span>
+            <span className="brand-subtitle">Built on Cleanverse</span>
+          </span>
         </Link>
       </div>
       <div className="header-actions">
         <nav className="app-nav" aria-label="Primary navigation">
-          {NAV_ITEMS.map((item) => (
+          {navItems.map((item) => (
             <Link
               key={item.id}
-              className={activeNav === item.id ? "active" : undefined}
+              className={isActiveNavItem(item.id) ? "active" : undefined}
               href={item.href}
             >
               {item.label}
@@ -114,10 +129,10 @@ export function SiteHeader({ activeNav }: SiteHeaderProps) {
         aria-label="Mobile navigation"
         aria-hidden={!menuOpen}
       >
-        {NAV_ITEMS.map((item) => (
+        {navItems.map((item) => (
           <Link
             key={item.id}
-            className={activeNav === item.id ? "active" : undefined}
+            className={isActiveNavItem(item.id) ? "active" : undefined}
             href={item.href}
             onClick={() => setMenuOpen(false)}
           >

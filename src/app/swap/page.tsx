@@ -6,7 +6,7 @@ import { TransactionHistoryPanel } from "@/features/transactions/TransactionHist
 
 export default function SwapPage() {
   return (
-    <main className="page">
+    <main className="page app-page">
       <SiteHeader activeNav="swap" />
 
       <section className="action-page">

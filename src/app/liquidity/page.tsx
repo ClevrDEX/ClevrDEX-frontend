@@ -24,7 +24,7 @@ const features = [
 
 export default function LiquidityIntroPage() {
   return (
-    <main className="page">
+    <main className="page app-page">
       <SiteHeader activeNav="liquidity" />
 
       <section className="intro">

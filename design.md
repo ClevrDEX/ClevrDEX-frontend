@@ -540,7 +540,7 @@ https://assets.example.com/tokenlist.json
 
 ```json
 {
-  "name": "Verified DEX Token List",
+  "name": "ClevrSwap Token List",
   "timestamp": "2026-06-12T00:00:00Z",
   "version": {
     "major": 1,
