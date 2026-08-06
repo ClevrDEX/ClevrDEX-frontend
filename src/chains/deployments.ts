@@ -19,6 +19,7 @@ export type DexDeployment = {
   apass: `0x${string}`
   tokenPolicy: `0x${string}`
   complianceValidator: `0x${string}`
+  tokenListUrl: string
   baseTokens: TokenInfo[]
   tokenList: TokenInfo[]
 }
@@ -60,6 +61,7 @@ export const DEX_DEPLOYMENTS: Record<number, DexDeployment> = {
     apass: "0xbA82D189540CaC9DC6FF46B6837CaC1BFdEC58B9",
     tokenPolicy: "0x36489bE45fa84f70a0c2BDB11D824Be608CB12Dd",
     complianceValidator: "0xaC7e5179C2C7f03f209136886c172eb34F161792",
+    tokenListUrl: process.env.NEXT_PUBLIC_TOKEN_LIST_URL ?? "",
     baseTokens: [baseSepoliaUsdc],
     tokenList: [baseSepoliaUsdc, baseSepoliaAUsdc],
   },

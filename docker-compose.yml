@@ -2,10 +2,13 @@ services:
   clean-dex-frontend:
     build:
       context: .
+      args:
+        NEXT_PUBLIC_TOKEN_LIST_URL: ${NEXT_PUBLIC_TOKEN_LIST_URL:-}
     image: clean-dex-frontend:latest
     ports:
       - "5003:5003"
     environment:
       NODE_ENV: production
       PORT: 5003
+      NEXT_PUBLIC_TOKEN_LIST_URL: ${NEXT_PUBLIC_TOKEN_LIST_URL:-}
     restart: unless-stopped

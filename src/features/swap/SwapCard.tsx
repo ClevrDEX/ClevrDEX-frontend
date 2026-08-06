@@ -26,6 +26,7 @@ import {
   formatTokenBalance,
   useTokenBalance,
 } from "@/features/tokens/useTokenBalance"
+import { useTokenList } from "@/features/tokens/useTokenList"
 import { TransactionSettingsModal } from "@/features/forms/TransactionSettingsModal"
 import {
   TransactionFlowModal,
@@ -43,20 +44,8 @@ export function SwapCard() {
   const { writeContractAsync, isPending } = useWriteContract()
 
   const deployment = getDexDeployment(chainId)
-  const listedTokens = deployment?.tokenList ?? []
-  const [importedTokens, setImportedTokens] = useState<TokenInfo[]>([])
-  const tokens = useMemo(() => {
-    const importedForChain = importedTokens.filter(
-      (token) =>
-        token.chainId === chainId &&
-        !listedTokens.some(
-          (listedToken) =>
-            listedToken.address.toLowerCase() === token.address.toLowerCase(),
-        ),
-    )
-
-    return [...listedTokens, ...importedForChain]
-  }, [chainId, importedTokens, listedTokens])
+  const tokenListQuery = useTokenList(chainId, deployment)
+  const tokens = tokenListQuery.data ?? deployment?.tokenList ?? []
 
   const [tokenInAddress, setTokenInAddress] = useState<`0x${string}` | "">(
     tokens[0]?.address ?? "",
@@ -353,22 +342,6 @@ export function SwapCard() {
     }
   }
 
-  function importToken(token: TokenInfo) {
-    setImportedTokens((currentTokens) => {
-      if (
-        currentTokens.some(
-          (currentToken) =>
-            currentToken.chainId === token.chainId &&
-            currentToken.address.toLowerCase() === token.address.toLowerCase(),
-        )
-      ) {
-        return currentTokens
-      }
-
-      return [...currentTokens, token]
-    })
-  }
-
   return (
     <section className="swap-card">
       <SwapCardHeader
@@ -397,12 +370,9 @@ export function SwapCard() {
             onChange={(event) => setAmountIn(event.target.value)}
           />
           <TokenSelect
-            chainId={chainId}
-            publicClient={publicClient}
             tokens={tokens}
             value={tokenInAddress}
             onChange={selectTokenIn}
-            onImport={importToken}
             owner={address}
           />
         </div>
@@ -431,12 +401,9 @@ export function SwapCard() {
             }
           />
           <TokenSelect
-            chainId={chainId}
-            publicClient={publicClient}
             tokens={tokens}
             value={tokenOutAddress}
             onChange={selectTokenOut}
-            onImport={importToken}
             owner={address}
           />
         </div>

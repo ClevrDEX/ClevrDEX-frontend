@@ -36,6 +36,7 @@ import {
   formatTokenBalance,
   useTokenBalance,
 } from "@/features/tokens/useTokenBalance"
+import { useTokenList } from "@/features/tokens/useTokenList"
 import { saveTransactionHistoryEntry } from "@/features/transactions/transactionHistory"
 
 export function LiquidityCard() {
@@ -45,20 +46,8 @@ export function LiquidityCard() {
   const { writeContractAsync, isPending } = useWriteContract()
 
   const deployment = getDexDeployment(chainId)
-  const listedTokens = deployment?.tokenList ?? []
-  const [importedTokens, setImportedTokens] = useState<TokenInfo[]>([])
-  const tokens = useMemo(() => {
-    const importedForChain = importedTokens.filter(
-      (token) =>
-        token.chainId === chainId &&
-        !listedTokens.some(
-          (listedToken) =>
-            listedToken.address.toLowerCase() === token.address.toLowerCase(),
-        ),
-    )
-
-    return [...listedTokens, ...importedForChain]
-  }, [chainId, importedTokens, listedTokens])
+  const tokenListQuery = useTokenList(chainId, deployment)
+  const tokens = tokenListQuery.data ?? deployment?.tokenList ?? []
 
   const [tokenAAddress, setTokenAAddress] = useState<`0x${string}` | "">(
     tokens[0]?.address ?? "",
@@ -434,22 +423,6 @@ export function LiquidityCard() {
     setAmountA(formatUnits(quoteLiquidity(parsed, reserveB, reserveA), tokenA.decimals))
   }
 
-  function importToken(token: TokenInfo) {
-    setImportedTokens((currentTokens) => {
-      if (
-        currentTokens.some(
-          (currentToken) =>
-            currentToken.chainId === token.chainId &&
-            currentToken.address.toLowerCase() === token.address.toLowerCase(),
-        )
-      ) {
-        return currentTokens
-      }
-
-      return [...currentTokens, token]
-    })
-  }
-
   function selectTokenA(nextAddress: `0x${string}` | "") {
     const previousTokenAAddress = tokenAAddress
 
@@ -499,12 +472,9 @@ export function LiquidityCard() {
         onAmountChange={handleAmountAChange}
         tokenSelect={
           <TokenSelect
-            chainId={chainId}
-            publicClient={publicClient}
             tokens={tokens}
             value={tokenAAddress}
             onChange={selectTokenA}
-            onImport={importToken}
             owner={address}
           />
         }
@@ -520,12 +490,9 @@ export function LiquidityCard() {
         onAmountChange={handleAmountBChange}
         tokenSelect={
           <TokenSelect
-            chainId={chainId}
-            publicClient={publicClient}
             tokens={tokens}
             value={tokenBAddress}
             onChange={selectTokenB}
-            onImport={importToken}
             owner={address}
           />
         }

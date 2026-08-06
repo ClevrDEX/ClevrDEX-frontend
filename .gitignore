@@ -5,6 +5,7 @@ dist
 .env
 .env.local
 .env*.local
+docker-compose.env
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*

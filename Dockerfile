@@ -12,6 +12,8 @@ RUN pnpm install --frozen-lockfile
 
 FROM base AS builder
 ENV NEXT_TELEMETRY_DISABLED=1
+ARG NEXT_PUBLIC_TOKEN_LIST_URL=""
+ENV NEXT_PUBLIC_TOKEN_LIST_URL=$NEXT_PUBLIC_TOKEN_LIST_URL
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN pnpm build

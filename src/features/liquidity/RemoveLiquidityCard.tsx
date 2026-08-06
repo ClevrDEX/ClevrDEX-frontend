@@ -37,6 +37,7 @@ import {
 } from "@/features/forms/TransactionFlowModal"
 import { formatTokenBalance } from "@/features/tokens/useTokenBalance"
 import { TokenAvatar } from "@/features/tokens/TokenAvatar"
+import { useTokenList } from "@/features/tokens/useTokenList"
 import {
   useLpPositions,
   type LpPosition,
@@ -50,8 +51,8 @@ export function RemoveLiquidityCard() {
   const chainId = useChainId()
   const { address } = useAccount()
   const deployment = getDexDeployment(chainId)
-  const listedTokens = deployment?.tokenList ?? []
-  const tokens = listedTokens
+  const tokenListQuery = useTokenList(chainId, deployment)
+  const tokens = tokenListQuery.data ?? deployment?.tokenList ?? []
 
   const [selectedPosition, setSelectedPosition] = useState<LpPosition | null>(
     null,

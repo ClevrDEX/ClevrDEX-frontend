@@ -2,12 +2,9 @@
 
 import { useMemo, useState } from "react"
 import { createPortal } from "react-dom"
-import { getAddress, isAddress } from "viem"
-import type { usePublicClient } from "wagmi"
 
 import type { TokenInfo } from "@/chains/deployments"
 import { CloseIcon } from "@/components/CloseIcon"
-import { erc20Abi } from "@/dex/v2/abi/erc20"
 import {
   formatTokenBalance,
   useTokenBalances,
@@ -15,38 +12,21 @@ import {
 import { TokenAvatar } from "@/features/tokens/TokenAvatar"
 
 export function TokenSelect({
-  chainId,
-  publicClient,
   tokens,
   value,
   onChange,
-  onImport,
   owner,
 }: {
-  chainId: number
-  publicClient: ReturnType<typeof usePublicClient>
   tokens: TokenInfo[]
   value: `0x${string}` | ""
   onChange: (value: `0x${string}` | "") => void
-  onImport: (token: TokenInfo) => void
   owner?: `0x${string}`
 }) {
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState("")
-  const [isImporting, setIsImporting] = useState(false)
-  const [importError, setImportError] = useState("")
   const selectedToken = tokens.find((token) => token.address === value)
   const balancesQuery = useTokenBalances(tokens, owner)
   const normalizedQuery = query.trim()
-  const searchAddress = isAddress(normalizedQuery)
-    ? getAddress(normalizedQuery)
-    : undefined
-  const hasListedSearchAddress = Boolean(
-    searchAddress &&
-      tokens.some(
-        (token) => token.address.toLowerCase() === searchAddress.toLowerCase(),
-      ),
-  )
   const filteredTokens = useMemo(() => {
     const normalized = normalizedQuery.toLowerCase()
 
@@ -66,52 +46,6 @@ export function TokenSelect({
     onChange(token.address)
     setOpen(false)
     setQuery("")
-    setImportError("")
-  }
-
-  async function importTokenByAddress() {
-    setImportError("")
-
-    if (!publicClient || !searchAddress) {
-      setImportError("Enter a valid token contract address.")
-      return
-    }
-
-    setIsImporting(true)
-
-    try {
-      const [name, symbol, decimals] = await Promise.all([
-        publicClient.readContract({
-          address: searchAddress,
-          abi: erc20Abi,
-          functionName: "name",
-        }),
-        publicClient.readContract({
-          address: searchAddress,
-          abi: erc20Abi,
-          functionName: "symbol",
-        }),
-        publicClient.readContract({
-          address: searchAddress,
-          abi: erc20Abi,
-          functionName: "decimals",
-        }),
-      ])
-      const token = {
-        chainId,
-        address: searchAddress,
-        name,
-        symbol,
-        decimals,
-      } satisfies TokenInfo
-
-      onImport(token)
-      selectToken(token)
-    } catch {
-      setImportError("Could not read ERC20 metadata from this address.")
-    } finally {
-      setIsImporting(false)
-    }
   }
 
   return (
@@ -150,7 +84,7 @@ export function TokenSelect({
                 <div className="token-menu-header">
                   <div>
                     <strong>Select a token</strong>
-                    <span>Search by name, symbol or contract address</span>
+                    <span>Search tokens from the configured token list</span>
                   </div>
                   <button
                     className="token-modal-close"
@@ -164,12 +98,9 @@ export function TokenSelect({
                 <input
                   className="token-search-input"
                   autoFocus
-                  placeholder="Search name or paste address"
+                  placeholder="Search name, symbol or address"
                   value={query}
-                  onChange={(event) => {
-                    setQuery(event.target.value)
-                    setImportError("")
-                  }}
+                  onChange={(event) => setQuery(event.target.value)}
                 />
 
                 <div className="token-list" role="listbox">
@@ -208,30 +139,10 @@ export function TokenSelect({
                   })}
                 </div>
 
-                {searchAddress && !hasListedSearchAddress ? (
-                  <div className="token-import-card">
-                    <div>
-                      <strong>Import token</strong>
-                      <span>{formatTokenAddress(searchAddress)}</span>
-                    </div>
-                    <button
-                      type="button"
-                      disabled={isImporting}
-                      onClick={importTokenByAddress}
-                    >
-                      {isImporting ? "Importing..." : "Import"}
-                    </button>
-                  </div>
-                ) : null}
-
-                {filteredTokens.length === 0 && !searchAddress ? (
+                {filteredTokens.length === 0 ? (
                   <p className="token-empty">
-                    No token found. Paste a contract address to import.
+                    No token found in the configured token list.
                   </p>
-                ) : null}
-
-                {importError ? (
-                  <p className="token-import-error">{importError}</p>
                 ) : null}
               </div>
             </div>,
