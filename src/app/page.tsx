@@ -8,25 +8,25 @@ import { SwapCard } from "@/features/swap/SwapCard"
 
 const problems = [
   {
-    icon: "RO",
+    icon: "routing",
     title: "Opaque routing",
     description:
       "Traders rarely see how a swap is routed or what price impact they are really taking.",
   },
   {
-    icon: "ID",
+    icon: "identity",
     title: "Unknown counterparties",
     description:
       "Most pools offer no identity context around who is providing or taking liquidity.",
   },
   {
-    icon: "PL",
+    icon: "policy",
     title: "Policy-blind execution",
     description:
       "Standard DEX flows cannot apply eligibility rules before an allocation settles.",
   },
   {
-    icon: "TR",
+    icon: "traceability",
     title: "Limited traceability",
     description:
       "Desks and institutions need swap flows that can be reviewed, monitored, and explained.",
@@ -44,37 +44,37 @@ const checklist = [
 
 const features = [
   {
-    icon: "CT",
+    icon: "01",
     title: "Compliance-first trading",
     description:
       "A polished swap surface for permission-aware ERC-20 execution and audit-friendly transaction flows.",
   },
   {
-    icon: "TR",
+    icon: "02",
     title: "Transparent routing",
     description:
       "See the route, price impact, and slippage before you confirm, with no hidden hops.",
   },
   {
-    icon: "SL",
+    icon: "03",
     title: "Slippage controls",
     description:
       "Set tolerances and confirmation states so every swap executes on your terms.",
   },
   {
-    icon: "SC",
+    icon: "04",
     title: "Self-custody execution",
     description:
       "You keep wallet control while the interface keeps route, slippage, and confirmation clear.",
   },
   {
-    icon: "CD",
+    icon: "05",
     title: "Configurable deployments",
     description:
       "Chain, router, factory, wrapped native, and token metadata stay configuration-driven.",
   },
   {
-    icon: "CV",
+    icon: "06",
     title: "Built on Cleanverse",
     description:
       "A-Pass identity and supported assets interlock to keep every swap accountable.",
@@ -106,25 +106,25 @@ const steps = [
 
 const useCases = [
   {
-    icon: "SW",
+    icon: "swap",
     title: "Compliant token swaps",
     description:
       "Swap supported assets with identity and policy context applied before settlement.",
   },
   {
-    icon: "LP",
+    icon: "liquidity",
     title: "Liquidity provision",
     description:
       "Provide liquidity into pools with cleaner participant and asset context.",
   },
   {
-    icon: "DT",
+    icon: "desk",
     title: "Desk & treasury execution",
     description:
       "Execute sized swaps with transparent routing and review-friendly records.",
   },
   {
-    icon: "IF",
+    icon: "institution",
     title: "Institution-connected flows",
     description:
       "Connect with Cleanverse-powered assets and compliance workflows for approved scenarios.",
@@ -259,7 +259,9 @@ export default function Home() {
           <div className="landing-grid landing-grid-4">
             {problems.map((problem) => (
               <article className="landing-info-card" key={problem.title}>
-                <span className="landing-icon">{problem.icon}</span>
+                <span className="landing-icon" aria-hidden="true">
+                  <ProblemIcon type={problem.icon} />
+                </span>
                 <h3>{problem.title}</h3>
                 <p>{problem.description}</p>
               </article>
@@ -349,7 +351,9 @@ export default function Home() {
           <div className="landing-grid landing-grid-4">
             {useCases.map((useCase) => (
               <article className="landing-use-card" key={useCase.title}>
-                <span className="landing-icon">{useCase.icon}</span>
+                <span className="landing-icon" aria-hidden="true">
+                  <UseCaseIcon type={useCase.icon} />
+                </span>
                 <h3>{useCase.title}</h3>
                 <p>{useCase.description}</p>
               </article>
@@ -384,6 +388,13 @@ export default function Home() {
               <span>Cleanverse infrastructure</span>
               <strong>Compliance-native foundation</strong>
               <small>Verified identity + verified assets + traceable transfers</small>
+            </div>
+            <div className="landing-infra-chips" aria-label="Cleanverse capabilities">
+              <span>A-Pass</span>
+              <span>A-Tokens</span>
+              <span>Policy controls</span>
+              <span>Traceability</span>
+              <span>Multi-chain</span>
             </div>
           </div>
         </div>
@@ -485,29 +496,47 @@ export default function Home() {
         <div className="landing-wrap">
           <div className="landing-footer-grid">
             <div>
-              <strong>ClevrSwap</strong>
-              <span>Built on Cleanverse</span>
+              <div className="landing-footer-brand">
+                <img
+                  alt=""
+                  aria-hidden="true"
+                  src="/cleanverse-logo-black.png"
+                />
+                <span>
+                  <strong>ClevrSwap</strong>
+                  <small>Built on Cleanverse</small>
+                </span>
+              </div>
               <p>
                 A compliance-aware DEX for verified onchain markets. Self-custody
                 by design.
               </p>
             </div>
-            <nav aria-label="Landing footer navigation">
-              <Link href="#product">Product</Link>
-              <Link href="#how">How it works</Link>
-              <Link href="#usecases">Use cases</Link>
-              <Link href="#faq">FAQ</Link>
-            </nav>
-            <nav aria-label="App footer navigation">
-              <Link href="/swap">Swap</Link>
-              <Link href="/liquidity/add">Liquidity</Link>
-            </nav>
+            <div className="landing-footer-links">
+              <nav aria-label="Landing footer navigation">
+                <h4>Product</h4>
+                <Link href="#product">Product</Link>
+                <Link href="#how">How it works</Link>
+                <Link href="#usecases">Use cases</Link>
+                <Link href="#faq">FAQ</Link>
+              </nav>
+              <nav aria-label="App footer navigation">
+                <h4>App</h4>
+                <Link href="/swap">Swap</Link>
+                <Link href="/liquidity/add">Liquidity</Link>
+                <Link href="#">Contact the team</Link>
+              </nav>
+            </div>
           </div>
           <div className="landing-footer-base">
-            <span>Built on Cleanverse - Testnet environment</span>
+            <div>
+              <span>© 2026 ClevrDEX</span>
+              <span>Built on Cleanverse · Testnet environment</span>
+            </div>
             <span>
               ClevrSwap is a technology interface built on Cleanverse
-              infrastructure.
+              infrastructure. Availability of features, assets, and networks may
+              vary by region, partner, and compliance requirements.
             </span>
           </div>
         </div>
@@ -544,6 +573,72 @@ function FaqItem({
         </div>
       </div>
     </article>
+  )
+}
+
+function ProblemIcon({ type }: { type: string }) {
+  if (type === "routing") {
+    return (
+      <svg viewBox="0 0 24 24">
+        <circle cx="11" cy="11" r="7" />
+        <path d="M21 21l-4-4" />
+      </svg>
+    )
+  }
+
+  if (type === "identity") {
+    return (
+      <svg viewBox="0 0 24 24">
+        <circle cx="12" cy="8" r="4" />
+        <path d="M5 20a7 7 0 0 1 14 0" />
+      </svg>
+    )
+  }
+
+  if (type === "policy") {
+    return (
+      <svg viewBox="0 0 24 24">
+        <path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z" />
+      </svg>
+    )
+  }
+
+  return (
+    <svg viewBox="0 0 24 24">
+      <path d="M4 5h16M4 12h16M4 19h10" />
+    </svg>
+  )
+}
+
+function UseCaseIcon({ type }: { type: string }) {
+  if (type === "swap") {
+    return (
+      <svg viewBox="0 0 24 24">
+        <path d="M4 8h12l-3-3M20 16H8l3 3" />
+      </svg>
+    )
+  }
+
+  if (type === "liquidity") {
+    return (
+      <svg viewBox="0 0 24 24">
+        <path d="M12 3v18M5 8l7-5 7 5M5 16l7 5 7-5" />
+      </svg>
+    )
+  }
+
+  if (type === "desk") {
+    return (
+      <svg viewBox="0 0 24 24">
+        <path d="M3 3v18h18M7 14l3-3 3 3 5-6" />
+      </svg>
+    )
+  }
+
+  return (
+    <svg viewBox="0 0 24 24">
+      <path d="M4 21V8l8-5 8 5v13M9 21v-6h6v6" />
+    </svg>
   )
 }
 
