@@ -24,6 +24,7 @@ type UseTradeComplianceParams = {
   deployment?: DexDeployment
   publicClient?: PublicClient
   enabled: boolean
+  checkPoolCompliance?: boolean
   poolPairs: [Address, Address][]
   tokenChecks: TokenCheck[]
 }
@@ -36,6 +37,7 @@ export function useTradeCompliance({
   deployment,
   publicClient,
   enabled,
+  checkPoolCompliance = true,
   poolPairs,
   tokenChecks,
 }: UseTradeComplianceParams) {
@@ -46,6 +48,7 @@ export function useTradeCompliance({
       deployment?.apass,
       deployment?.tokenPolicy,
       deployment?.complianceValidator,
+      checkPoolCompliance,
       poolPairs.map(([tokenA, tokenB]) => `${tokenA}-${tokenB}`),
       tokenChecks.map(
         (check) =>
@@ -59,7 +62,8 @@ export function useTradeCompliance({
       Boolean(publicClient) &&
       deployment?.apass !== zeroAddress &&
       deployment?.tokenPolicy !== zeroAddress &&
-      deployment?.complianceValidator !== zeroAddress,
+      (!checkPoolCompliance ||
+        deployment?.complianceValidator !== zeroAddress),
     queryFn: async () => {
       if (!address || !deployment || !publicClient) {
         return { allowed: false, message: "Connect your wallet." }
@@ -155,73 +159,77 @@ export function useTradeCompliance({
         }
       }
 
-      let pairAddresses: Address[]
-      let missingPair: boolean
-      try {
-        ;({ pairAddresses, missingPair } = await getPairAddresses({
-          client: publicClient,
-          factory: deployment.factory,
-          poolPairs,
-        }))
-      } catch {
-        return {
-          allowed: false,
-          message: "Unable to resolve pool address. Check DEX factory deployment.",
-        }
-      }
-
-      if (missingPair) {
-        return {
-          allowed: false,
-          message: "This trading pair is not registered for compliance.",
-        }
-      }
-
-      for (const pairAddress of pairAddresses) {
-        let isRegistered: boolean
+      if (checkPoolCompliance) {
+        let pairAddresses: Address[]
+        let missingPair: boolean
         try {
-          isRegistered = await publicClient.readContract({
-            address: deployment.complianceValidator,
-            abi: apassComplianceValidatorAbi,
-            functionName: "isRegistered",
-            args: [pairAddress],
-          })
+          ;({ pairAddresses, missingPair } = await getPairAddresses({
+            client: publicClient,
+            factory: deployment.factory,
+            poolPairs,
+          }))
         } catch {
           return {
             allowed: false,
             message:
-              "Unable to read pair registration. Check compliance validator deployment.",
+              "Unable to resolve pool address. Check DEX factory deployment.",
           }
         }
 
-        if (!isRegistered) {
+        if (missingPair) {
           return {
             allowed: false,
             message: "This trading pair is not registered for compliance.",
           }
         }
 
-        try {
-          const isCompliant = await publicClient.readContract({
-            address: deployment.complianceValidator,
-            abi: apassComplianceValidatorAbi,
-            functionName: "complianceVerify",
-            args: [pairAddress, address],
-          })
-
-          if (!isCompliant) {
+        for (const pairAddress of pairAddresses) {
+          let isRegistered: boolean
+          try {
+            isRegistered = await publicClient.readContract({
+              address: deployment.complianceValidator,
+              abi: apassComplianceValidatorAbi,
+              functionName: "isRegistered",
+              args: [pairAddress],
+            })
+          } catch {
             return {
               allowed: false,
-              message: "Trader A-Pass does not meet this pair's compliance rules.",
+              message:
+                "Unable to read pair registration. Check compliance validator deployment.",
             }
           }
-        } catch (error) {
-          return {
-            allowed: false,
-            message: getComplianceErrorMessage(
-              error,
-              "Trader A-Pass does not meet this pair's compliance rules.",
-            ),
+
+          if (!isRegistered) {
+            return {
+              allowed: false,
+              message: "This trading pair is not registered for compliance.",
+            }
+          }
+
+          try {
+            const isCompliant = await publicClient.readContract({
+              address: deployment.complianceValidator,
+              abi: apassComplianceValidatorAbi,
+              functionName: "complianceVerify",
+              args: [pairAddress, address],
+            })
+
+            if (!isCompliant) {
+              return {
+                allowed: false,
+                message:
+                  "Trader A-Pass does not meet this pair's compliance rules.",
+              }
+            }
+          } catch (error) {
+            return {
+              allowed: false,
+              message: getComplianceErrorMessage(
+                error,
+                "Trader A-Pass does not meet this pair's compliance rules.",
+              ),
+            }
           }
         }
       }

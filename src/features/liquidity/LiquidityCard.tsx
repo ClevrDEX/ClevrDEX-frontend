@@ -189,6 +189,7 @@ export function LiquidityCard() {
     address,
     deployment,
     publicClient,
+    checkPoolCompliance: false,
     enabled:
       Boolean(address) &&
       Boolean(deployment) &&
