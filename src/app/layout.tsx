@@ -17,9 +17,9 @@ export const metadata: Metadata = {
   description:
     "ClevrSwap is a compliance-aware DEX built on Cleanverse for policy-aware swaps.",
   icons: {
-    icon: "/cleanverse-logo-black.png",
-    shortcut: "/cleanverse-logo-black.png",
-    apple: "/cleanverse-logo-black.png",
+    icon: "/favicon.ico",
+    shortcut: "/favicon.ico",
+    apple: "/favicon.ico",
   },
 }
 

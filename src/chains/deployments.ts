@@ -62,8 +62,8 @@ export const DEX_DEPLOYMENTS: Record<number, DexDeployment> = {
     tokenPolicy: "0x36489bE45fa84f70a0c2BDB11D824Be608CB12Dd",
     complianceValidator: "0xaC7e5179C2C7f03f209136886c172eb34F161792",
     tokenListUrl: process.env.NEXT_PUBLIC_TOKEN_LIST_URL ?? "",
-    baseTokens: [baseSepoliaUsdc],
-    tokenList: [baseSepoliaUsdc, baseSepoliaAUsdc],
+    baseTokens: [baseSepoliaAUsdc],
+    tokenList: [baseSepoliaAUsdc],
   },
 }
 
