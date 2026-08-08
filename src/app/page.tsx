@@ -1,202 +1,237 @@
 "use client"
 
 import Link from "next/link"
-import { useState } from "react"
+import { useMemo, useState } from "react"
+import { useChainId } from "wagmi"
 
+import { getDexDeployment } from "@/chains/deployments"
 import { SiteHeader } from "@/components/SiteHeader"
 import { SwapCard } from "@/features/swap/SwapCard"
+import { useTokenList } from "@/features/tokens/useTokenList"
+import { useI18n, type MessageKey } from "@/i18n"
 
 const problems = [
   {
     icon: "routing",
-    title: "Opaque routing",
-    description:
-      "Traders rarely see how a swap is routed or what price impact they are really taking.",
+    titleKey: "landing.problem.routing.title",
+    descriptionKey: "landing.problem.routing.description",
   },
   {
     icon: "identity",
-    title: "Unknown counterparties",
-    description:
-      "Most pools offer no identity context around who is providing or taking liquidity.",
+    titleKey: "landing.problem.identity.title",
+    descriptionKey: "landing.problem.identity.description",
   },
   {
     icon: "policy",
-    title: "Policy-blind execution",
-    description:
-      "Standard DEX flows cannot apply eligibility rules before an allocation settles.",
+    titleKey: "landing.problem.policy.title",
+    descriptionKey: "landing.problem.policy.description",
   },
   {
     icon: "traceability",
-    title: "Limited traceability",
-    description:
-      "Desks and institutions need swap flows that can be reviewed, monitored, and explained.",
+    titleKey: "landing.problem.traceability.title",
+    descriptionKey: "landing.problem.traceability.description",
   },
-]
+] satisfies {
+  icon: string
+  titleKey: MessageKey
+  descriptionKey: MessageKey
+}[]
 
 const checklist = [
-  "Policy-aware swaps across supported networks",
-  "Transparent routing and clear price impact",
-  "Verified participants through A-Pass",
-  "Supported compliant assets such as A-Tokens",
-  "Self-custody execution, wallet-native throughout",
-  "Traceable onchain swap records",
-]
+  "landing.solution.item1",
+  "landing.solution.item2",
+  "landing.solution.item3",
+  "landing.solution.item4",
+  "landing.solution.item5",
+  "landing.solution.item6",
+] satisfies MessageKey[]
 
 const features = [
   {
     icon: "01",
-    title: "Compliance-first trading",
-    description:
-      "A polished swap surface for permission-aware ERC-20 execution and audit-friendly transaction flows.",
+    titleKey: "landing.feature.compliance.title",
+    descriptionKey: "landing.feature.compliance.description",
   },
   {
     icon: "02",
-    title: "Transparent routing",
-    description:
-      "See the route, price impact, and slippage before you confirm, with no hidden hops.",
+    titleKey: "landing.feature.routing.title",
+    descriptionKey: "landing.feature.routing.description",
   },
   {
     icon: "03",
-    title: "Slippage controls",
-    description:
-      "Set tolerances and confirmation states so every swap executes on your terms.",
+    titleKey: "landing.feature.slippage.title",
+    descriptionKey: "landing.feature.slippage.description",
   },
   {
     icon: "04",
-    title: "Self-custody execution",
-    description:
-      "You keep wallet control while the interface keeps route, slippage, and confirmation clear.",
+    titleKey: "landing.feature.custody.title",
+    descriptionKey: "landing.feature.custody.description",
   },
   {
     icon: "05",
-    title: "Configurable deployments",
-    description:
-      "Chain, router, factory, wrapped native, and token metadata stay configuration-driven.",
+    titleKey: "landing.feature.deployments.title",
+    descriptionKey: "landing.feature.deployments.description",
   },
   {
     icon: "06",
-    title: "Built on Cleanverse",
-    description:
-      "A-Pass identity and supported assets interlock to keep every swap accountable.",
+    titleKey: "landing.feature.cleanverse.title",
+    descriptionKey: "landing.feature.cleanverse.description",
   },
-]
+] satisfies {
+  icon: string
+  titleKey: MessageKey
+  descriptionKey: MessageKey
+}[]
 
 const steps = [
   {
-    title: "Connect wallet & A-Pass",
-    description:
-      "Connect your wallet and A-Pass to establish a verified trading profile.",
+    titleKey: "landing.how.step1.title",
+    descriptionKey: "landing.how.step1.description",
   },
   {
-    title: "Choose tokens & review route",
-    description:
-      "Pick the pair and review the route, price impact, and estimated output.",
+    titleKey: "landing.how.step2.title",
+    descriptionKey: "landing.how.step2.description",
   },
   {
-    title: "Set slippage & confirm",
-    description:
-      "Set your slippage tolerance and confirm the swap from your wallet.",
+    titleKey: "landing.how.step3.title",
+    descriptionKey: "landing.how.step3.description",
   },
   {
-    title: "Execute & track onchain",
-    description:
-      "Execute, then review status, route, and traceability in one place.",
+    titleKey: "landing.how.step4.title",
+    descriptionKey: "landing.how.step4.description",
   },
-]
+] satisfies { titleKey: MessageKey; descriptionKey: MessageKey }[]
 
 const useCases = [
   {
     icon: "swap",
-    title: "Compliant token swaps",
-    description:
-      "Swap supported assets with identity and policy context applied before settlement.",
+    titleKey: "landing.useCase.swaps.title",
+    descriptionKey: "landing.useCase.swaps.description",
   },
   {
     icon: "liquidity",
-    title: "Liquidity provision",
-    description:
-      "Provide liquidity into pools with cleaner participant and asset context.",
+    titleKey: "landing.useCase.liquidity.title",
+    descriptionKey: "landing.useCase.liquidity.description",
   },
   {
     icon: "desk",
-    title: "Desk & treasury execution",
-    description:
-      "Execute sized swaps with transparent routing and review-friendly records.",
+    titleKey: "landing.useCase.desk.title",
+    descriptionKey: "landing.useCase.desk.description",
   },
   {
     icon: "institution",
-    title: "Institution-connected flows",
-    description:
-      "Connect with Cleanverse-powered assets and compliance workflows for approved scenarios.",
+    titleKey: "landing.useCase.institution.title",
+    descriptionKey: "landing.useCase.institution.description",
   },
-]
+] satisfies {
+  icon: string
+  titleKey: MessageKey
+  descriptionKey: MessageKey
+}[]
 
-const mockups = [
+type MockupRow = {
+  label?: string
+  labelKey?: MessageKey
+  value?: string
+  valueKey?: MessageKey
+}
+
+type Mockup = {
+  titleKey: MessageKey
+  badgeKey: MessageKey
+  rows: MockupRow[]
+}
+
+const mockups: Mockup[] = [
   {
-    title: "Swap",
-    badge: "Ready",
+    titleKey: "landing.mock.swap",
+    badgeKey: "landing.mock.ready",
     rows: [
-      ["You pay", "2,500.00 aUSDC"],
-      ["You receive", "2,498.10 aTSY"],
-      ["Network", "Base Sepolia"],
-      ["A-Pass", "Verified"],
+      { labelKey: "landing.mock.pay", value: "2,500.00 aUSDC" },
+      { labelKey: "landing.mock.receive", value: "2,498.10 aTSY" },
+      { labelKey: "landing.solution.network", value: "Base Sepolia" },
+      { labelKey: "landing.mock.apass", valueKey: "landing.mock.verified" },
     ],
   },
   {
-    title: "Add liquidity",
-    badge: "Pool",
+    titleKey: "landing.mock.addLiquidity",
+    badgeKey: "landing.mock.pool",
     rows: [
-      ["Pair", "aUSDC / aTSY"],
-      ["aUSDC", "10,000.00"],
-      ["aTSY", "9,992.40"],
-      ["Pool share", "1.84%"],
+      { labelKey: "landing.mock.pair", value: "aUSDC / aTSY" },
+      { label: "aUSDC", value: "10,000.00" },
+      { label: "aTSY", value: "9,992.40" },
+      { labelKey: "landing.mock.poolShare", value: "1.84%" },
     ],
   },
   {
-    title: "Swap detail",
-    badge: "Verified",
+    titleKey: "landing.mock.swapDetail",
+    badgeKey: "landing.mock.verified",
     rows: [
-      ["Amount", "2,500.00 aUSDC"],
-      ["Network", "Base Sepolia"],
-      ["Status", "Confirmed"],
-      ["Trace ID", "TRC-8F4C-21"],
+      { labelKey: "landing.mock.amount", value: "2,500.00 aUSDC" },
+      { labelKey: "landing.solution.network", value: "Base Sepolia" },
+      { labelKey: "landing.mock.status", valueKey: "landing.mock.confirmed" },
+      { labelKey: "landing.mock.traceId", value: "TRC-8F4C-21" },
     ],
   },
 ]
 
 const trustItems = [
-  "Identity-aware swap flows",
-  "Supported asset controls",
-  "Traceable transaction records",
-  "Network-aware execution guidance",
-  "Risk-reducing user experience",
-  "Review-friendly trade history",
-]
+  "landing.trust.item1",
+  "landing.trust.item2",
+  "landing.trust.item3",
+  "landing.trust.item4",
+  "landing.trust.item5",
+  "landing.trust.item6",
+] satisfies MessageKey[]
 
 const faqs = [
   {
-    question: "What is ClevrSwap?",
-    answer:
-      "ClevrSwap is a compliance-aware DEX interface built on Cleanverse. It brings A-Pass identity and supported-asset controls into a focused swap experience with transparent routing and self-custody execution.",
+    questionKey: "landing.faq.q1",
+    answerKey: "landing.faq.a1",
   },
   {
-    question: "What is A-Pass?",
-    answer:
-      "A-Pass is Cleanverse's participant eligibility credential. It binds verified identity attributes to a wallet so eligibility rules can be applied before a swap settles.",
+    questionKey: "landing.faq.q2",
+    answerKey: "landing.faq.a2",
   },
   {
-    question: "Is ClevrSwap self-custody?",
-    answer:
-      "Yes. You keep wallet control throughout. ClevrSwap keeps route, slippage, and confirmation states clear, but never takes custody of your assets.",
+    questionKey: "landing.faq.q3",
+    answerKey: "landing.faq.a3",
   },
   {
-    question: "Which chains and tokens are supported?",
-    answer:
-      "Support is configuration-driven across deployments. The current testnet environment runs on Base Sepolia with ERC-20 routing and supported assets such as A-Tokens.",
+    questionKey: "landing.faq.q4",
+    answerKey: "landing.faq.a4",
   },
-]
+  {
+    questionKey: "landing.faq.q5",
+    answerKey: "landing.faq.a5",
+  },
+  {
+    questionKey: "landing.faq.q6",
+    answerKey: "landing.faq.a6",
+  },
+] satisfies { questionKey: MessageKey; answerKey: MessageKey }[]
 
 export default function Home() {
+  const { t } = useI18n()
+  const chainId = useChainId()
+  const deployment = getDexDeployment(chainId)
+  const tokenListQuery = useTokenList(chainId, deployment)
+  const tokens = tokenListQuery.data ?? deployment?.tokenList ?? []
+  const assetSupportValue = useMemo(() => {
+    const aUsdc = tokens.find(
+      (token) => token.symbol.toLowerCase() === "ausdc",
+    )
+    const pairedToken = tokens.find(
+      (token) => token.address !== aUsdc?.address,
+    )
+
+    if (!aUsdc || !pairedToken) {
+      return undefined
+    }
+
+    return `${aUsdc.symbol} - ${pairedToken.symbol}`
+  }, [tokens])
+
   return (
     <main className="page landing-page">
       <SiteHeader activeNav="home" />
@@ -206,41 +241,39 @@ export default function Home() {
           <div>
             <span className="landing-tag">
               <span aria-hidden="true" />
-              Built on Cleanverse
+              {t("landing.hero.tag")}
             </span>
-            <h1>Onchain swaps, instantly trusted.</h1>
+            <h1>{t("landing.hero.title")}</h1>
             <p className="landing-sub">
-              ClevrSwap brings A-Pass compliance into a focused swap experience:
-              policy-aware execution, transparent routing, and self-custody,
-              across configured deployments.
+              {t("landing.hero.subtitle")}
             </p>
 
             <div className="landing-actions">
               <Link className="landing-button landing-button-primary" href="/swap">
-                Start swapping <span aria-hidden="true">-&gt;</span>
+                {t("landing.hero.ctaSwap")} <span aria-hidden="true">-&gt;</span>
               </Link>
               <Link className="landing-button landing-button-ghost" href="/liquidity/add">
-                Add liquidity
+                {t("landing.hero.ctaLiquidity")}
               </Link>
             </div>
 
-            <div className="landing-chips" aria-label="Platform highlights">
+            <div className="landing-chips" aria-label={t("landing.hero.highlights")}>
               <span>
                 <i aria-hidden="true" />
-                Base Sepolia ready
+                {t("landing.hero.chipBase")}
               </span>
               <span>
                 <i aria-hidden="true" />
-                ERC-20 routing
+                {t("landing.hero.chipRouting")}
               </span>
               <span>
                 <i aria-hidden="true" />
-                Wallet-controlled
+                {t("landing.hero.chipWallet")}
               </span>
             </div>
           </div>
 
-          <div className="home-swap-panel" aria-label="ClevrSwap quick swap">
+          <div className="home-swap-panel" aria-label={t("landing.hero.swapAria")}>
             <SwapCard />
           </div>
         </div>
@@ -249,21 +282,18 @@ export default function Home() {
       <section className="landing-section" id="product">
         <div className="landing-wrap">
           <div className="landing-section-head">
-            <span className="landing-eyebrow">The problem</span>
-            <h2>Onchain trading should not feel opaque or risky.</h2>
-            <p>
-              Permissionless swaps are fast, but they leave traders without
-              identity context, policy assurance, or a clear audit trail.
-            </p>
+            <span className="landing-eyebrow">{t("landing.problem.eyebrow")}</span>
+            <h2>{t("landing.problem.title")}</h2>
+            <p>{t("landing.problem.subtitle")}</p>
           </div>
           <div className="landing-grid landing-grid-4">
             {problems.map((problem) => (
-              <article className="landing-info-card" key={problem.title}>
+              <article className="landing-info-card" key={problem.titleKey}>
                 <span className="landing-icon" aria-hidden="true">
                   <ProblemIcon type={problem.icon} />
                 </span>
-                <h3>{problem.title}</h3>
-                <p>{problem.description}</p>
+                <h3>{t(problem.titleKey)}</h3>
+                <p>{t(problem.descriptionKey)}</p>
               </article>
             ))}
           </div>
@@ -273,18 +303,14 @@ export default function Home() {
       <section className="landing-section landing-section-alt">
         <div className="landing-wrap landing-split">
           <div>
-            <span className="landing-eyebrow">The ClevrSwap layer</span>
-            <h2>Compliant swaps, without the complexity underneath.</h2>
-            <p>
-              ClevrSwap brings the compliance capabilities of Cleanverse into a
-              simple swap surface. Trade across supported networks, interact with
-              verified participants, and review transparent execution.
-            </p>
+            <span className="landing-eyebrow">{t("landing.solution.eyebrow")}</span>
+            <h2>{t("landing.solution.title")}</h2>
+            <p>{t("landing.solution.subtitle")}</p>
             <div className="landing-checklist">
               {checklist.map((item) => (
                 <span key={item}>
                   <i aria-hidden="true" />
-                  {item}
+                  {t(item)}
                 </span>
               ))}
             </div>
@@ -292,15 +318,29 @@ export default function Home() {
 
           <div className="landing-mini-card">
             <div className="landing-mock-head">
-              <span>Eligibility gate</span>
-              <strong>Pre-trade</strong>
+              <span>{t("landing.solution.cardTitle")}</span>
+              <strong>{t("landing.solution.cardBadge")}</strong>
             </div>
             <div className="landing-mock-body">
-              <MockRow label="Participant A-Pass" value="Valid" positive />
-              <MockRow label="Asset support" value="aUSDC - aTSY" positive />
-              <MockRow label="Eligibility rule" value="Tier II" />
-              <MockRow label="Network" value="Base Sepolia" />
-              <MockRow label="Settlement" value="Cleared to execute" positive />
+              <MockRow
+                label={t("landing.solution.participant")}
+                value={t("landing.solution.valid")}
+                positive
+              />
+              {assetSupportValue ? (
+                <MockRow
+                  label={t("landing.solution.assetSupport")}
+                  value={assetSupportValue}
+                  positive
+                />
+              ) : null}
+              <MockRow label={t("landing.solution.eligibilityRule")} value="Tier II" />
+              <MockRow label={t("landing.solution.network")} value="Base Sepolia" />
+              <MockRow
+                label={t("landing.solution.settlement")}
+                value={t("landing.solution.cleared")}
+                positive
+              />
             </div>
           </div>
         </div>
@@ -309,15 +349,15 @@ export default function Home() {
       <section className="landing-section">
         <div className="landing-wrap">
           <div className="landing-section-head center">
-            <span className="landing-eyebrow">Product</span>
-            <h2>Built around compliant, transparent execution.</h2>
+            <span className="landing-eyebrow">{t("landing.product.eyebrow")}</span>
+            <h2>{t("landing.product.title")}</h2>
           </div>
           <div className="landing-grid landing-grid-3">
             {features.map((feature) => (
-              <article className="landing-feature-card" key={feature.title}>
+              <article className="landing-feature-card" key={feature.titleKey}>
                 <span className="landing-icon">{feature.icon}</span>
-                <h3>{feature.title}</h3>
-                <p>{feature.description}</p>
+                <h3>{t(feature.titleKey)}</h3>
+                <p>{t(feature.descriptionKey)}</p>
               </article>
             ))}
           </div>
@@ -327,15 +367,15 @@ export default function Home() {
       <section className="landing-section landing-section-alt" id="how">
         <div className="landing-wrap">
           <div className="landing-section-head center">
-            <span className="landing-eyebrow">How it works</span>
-            <h2>From wallet to settled swap in four steps.</h2>
+            <span className="landing-eyebrow">{t("landing.how.eyebrow")}</span>
+            <h2>{t("landing.how.title")}</h2>
           </div>
           <div className="landing-steps">
             {steps.map((step, index) => (
-              <article key={step.title}>
+              <article key={step.titleKey}>
                 <span>{index + 1}</span>
-                <h3>{step.title}</h3>
-                <p>{step.description}</p>
+                <h3>{t(step.titleKey)}</h3>
+                <p>{t(step.descriptionKey)}</p>
               </article>
             ))}
           </div>
@@ -345,17 +385,17 @@ export default function Home() {
       <section className="landing-section" id="usecases">
         <div className="landing-wrap">
           <div className="landing-section-head">
-            <span className="landing-eyebrow">Use cases</span>
-            <h2>Built for verified onchain markets.</h2>
+            <span className="landing-eyebrow">{t("landing.useCases.eyebrow")}</span>
+            <h2>{t("landing.useCases.title")}</h2>
           </div>
           <div className="landing-grid landing-grid-4">
             {useCases.map((useCase) => (
-              <article className="landing-use-card" key={useCase.title}>
+              <article className="landing-use-card" key={useCase.titleKey}>
                 <span className="landing-icon" aria-hidden="true">
                   <UseCaseIcon type={useCase.icon} />
                 </span>
-                <h3>{useCase.title}</h3>
-                <p>{useCase.description}</p>
+                <h3>{t(useCase.titleKey)}</h3>
+                <p>{t(useCase.descriptionKey)}</p>
               </article>
             ))}
           </div>
@@ -365,36 +405,37 @@ export default function Home() {
       <section className="landing-section landing-section-alt">
         <div className="landing-wrap">
           <div className="landing-section-head center">
-            <span className="landing-eyebrow">Infrastructure relationship</span>
-            <h2>Built on Cleanverse</h2>
-            <p>
-              Cleanverse provides the compliance-native infrastructure behind
-              ClevrSwap: interlocking verified identity with verified assets so
-              every swap is transparent and traceable.
-            </p>
+            <span className="landing-eyebrow">
+              {t("landing.infrastructure.eyebrow")}
+            </span>
+            <h2>{t("landing.infrastructure.title")}</h2>
+            <p>{t("landing.infrastructure.subtitle")}</p>
           </div>
           <div className="landing-infra">
             <div className="landing-layer">
-              <span>Trader / LP</span>
-              <strong>People & desks initiating swaps</strong>
+              <span>{t("landing.infrastructure.layer1.title")}</span>
+              <strong>{t("landing.infrastructure.layer1.body")}</strong>
             </div>
             <i />
             <div className="landing-layer">
-              <span>ClevrSwap interface</span>
-              <strong>Trusted swap experience</strong>
+              <span>{t("landing.infrastructure.layer2.title")}</span>
+              <strong>{t("landing.infrastructure.layer2.body")}</strong>
             </div>
             <i />
             <div className="landing-layer core">
-              <span>Cleanverse infrastructure</span>
-              <strong>Compliance-native foundation</strong>
-              <small>Verified identity + verified assets + traceable transfers</small>
+              <span>{t("landing.infrastructure.layer3.title")}</span>
+              <strong>{t("landing.infrastructure.layer3.body")}</strong>
+              <small>{t("landing.infrastructure.layer3.small")}</small>
             </div>
-            <div className="landing-infra-chips" aria-label="Cleanverse capabilities">
+            <div
+              className="landing-infra-chips"
+              aria-label={t("landing.infrastructure.capabilities")}
+            >
               <span>A-Pass</span>
               <span>A-Tokens</span>
-              <span>Policy controls</span>
-              <span>Traceability</span>
-              <span>Multi-chain</span>
+              <span>{t("landing.infrastructure.policy")}</span>
+              <span>{t("landing.infrastructure.traceability")}</span>
+              <span>{t("landing.infrastructure.multichain")}</span>
             </div>
           </div>
         </div>
@@ -403,25 +444,32 @@ export default function Home() {
       <section className="landing-section">
         <div className="landing-wrap">
           <div className="landing-section-head">
-            <span className="landing-eyebrow">A closer look</span>
-            <h2>A cleaner, more legible way to trade onchain.</h2>
+            <span className="landing-eyebrow">{t("landing.mock.eyebrow")}</span>
+            <h2>{t("landing.mock.title")}</h2>
           </div>
           <div className="landing-grid landing-grid-3">
             {mockups.map((mockup) => (
-              <article className="landing-mini-card" key={mockup.title}>
+              <article className="landing-mini-card" key={mockup.titleKey}>
                 <div className="landing-mock-head">
-                  <span>{mockup.title}</span>
-                  <strong className={mockup.badge === "Verified" ? "ok" : undefined}>
-                    {mockup.badge}
+                  <span>{t(mockup.titleKey)}</span>
+                  <strong
+                    className={
+                      mockup.badgeKey === "landing.mock.verified" ? "ok" : undefined
+                    }
+                  >
+                    {t(mockup.badgeKey)}
                   </strong>
                 </div>
                 <div className="landing-mock-body">
-                  {mockup.rows.map(([label, value]) => (
+                  {mockup.rows.map((row) => (
                     <MockRow
-                      key={`${mockup.title}-${label}`}
-                      label={label}
-                      value={value}
-                      positive={value === "Verified" || value === "Confirmed"}
+                      key={`${mockup.titleKey}-${row.labelKey ?? row.label}`}
+                      label={row.labelKey ? t(row.labelKey) : (row.label ?? "")}
+                      value={row.valueKey ? t(row.valueKey) : (row.value ?? "")}
+                      positive={
+                        row.valueKey === "landing.mock.verified" ||
+                        row.valueKey === "landing.mock.confirmed"
+                      }
                     />
                   ))}
                 </div>
@@ -434,19 +482,15 @@ export default function Home() {
       <section className="landing-section landing-section-alt">
         <div className="landing-wrap landing-split">
           <div>
-            <span className="landing-eyebrow">Trust & compliance</span>
-            <h2>Designed for verified markets, not anonymity.</h2>
-            <p>
-              Instead of treating every wallet as unknown, ClevrSwap uses
-              Cleanverse-powered identity and asset verification to create a
-              cleaner trading environment.
-            </p>
+            <span className="landing-eyebrow">{t("landing.trust.eyebrow")}</span>
+            <h2>{t("landing.trust.title")}</h2>
+            <p>{t("landing.trust.subtitle")}</p>
           </div>
           <div className="landing-trust-grid">
             {trustItems.map((item) => (
               <span key={item}>
                 <i aria-hidden="true" />
-                {item}
+                {t(item)}
               </span>
             ))}
           </div>
@@ -456,17 +500,14 @@ export default function Home() {
       <section className="landing-section">
         <div className="landing-wrap">
           <div className="landing-band">
-            <h2>Start trading through a cleaner, compliant DEX.</h2>
-            <p>
-              Bring policy-aware swaps and verified participants to your onchain
-              markets with ClevrSwap.
-            </p>
+            <h2>{t("landing.band.title")}</h2>
+            <p>{t("landing.band.subtitle")}</p>
             <div className="landing-band-actions">
               <Link className="landing-button landing-button-accent" href="/swap">
-                Start swapping <span aria-hidden="true">-&gt;</span>
+                {t("landing.hero.ctaSwap")} <span aria-hidden="true">-&gt;</span>
               </Link>
               <Link className="landing-button landing-button-dark-ghost" href="/liquidity/add">
-                Add liquidity
+                {t("landing.hero.ctaLiquidity")}
               </Link>
             </div>
           </div>
@@ -476,16 +517,16 @@ export default function Home() {
       <section className="landing-section" id="faq">
         <div className="landing-wrap">
           <div className="landing-section-head center">
-            <span className="landing-eyebrow">FAQ</span>
-            <h2>Questions, answered.</h2>
+            <span className="landing-eyebrow">{t("landing.faq.eyebrow")}</span>
+            <h2>{t("landing.faq.title")}</h2>
           </div>
           <div className="landing-faq">
             {faqs.map((faq, index) => (
               <FaqItem
-                key={faq.question}
-                answer={faq.answer}
+                key={faq.questionKey}
+                answer={t(faq.answerKey)}
                 defaultOpen={index === 0}
-                question={faq.question}
+                question={t(faq.questionKey)}
               />
             ))}
           </div>
@@ -504,40 +545,33 @@ export default function Home() {
                 />
                 <span>
                   <strong>ClevrSwap</strong>
-                  <small>Built on Cleanverse</small>
+                  <small>{t("brand.subtitle")}</small>
                 </span>
               </div>
-              <p>
-                A compliance-aware DEX for verified onchain markets. Self-custody
-                by design.
-              </p>
+              <p>{t("landing.footer.tag")}</p>
             </div>
             <div className="landing-footer-links">
-              <nav aria-label="Landing footer navigation">
-                <h4>Product</h4>
-                <Link href="#product">Product</Link>
-                <Link href="#how">How it works</Link>
-                <Link href="#usecases">Use cases</Link>
-                <Link href="#faq">FAQ</Link>
+              <nav aria-label={t("nav.primary")}>
+                <h4>{t("landing.footer.product")}</h4>
+                <Link href="#product">{t("nav.product")}</Link>
+                <Link href="#how">{t("nav.how")}</Link>
+                <Link href="#usecases">{t("nav.useCases")}</Link>
+                <Link href="#faq">{t("nav.faq")}</Link>
               </nav>
-              <nav aria-label="App footer navigation">
-                <h4>App</h4>
-                <Link href="/swap">Swap</Link>
-                <Link href="/liquidity/add">Liquidity</Link>
-                <Link href="#">Contact the team</Link>
+              <nav aria-label={t("landing.footer.app")}>
+                <h4>{t("landing.footer.app")}</h4>
+                <Link href="/swap">{t("nav.swap")}</Link>
+                <Link href="/liquidity/add">{t("nav.liquidity")}</Link>
+                <Link href="#">{t("landing.footer.contact")}</Link>
               </nav>
             </div>
           </div>
           <div className="landing-footer-base">
             <div>
               <span>© 2026 ClevrDEX</span>
-              <span>Built on Cleanverse · Testnet environment</span>
+              <span>{t("landing.footer.built")}</span>
             </div>
-            <span>
-              ClevrSwap is a technology interface built on Cleanverse
-              infrastructure. Availability of features, assets, and networks may
-              vary by region, partner, and compliance requirements.
-            </span>
+            <span>{t("landing.footer.disclaimer")}</span>
           </div>
         </div>
       </footer>
@@ -662,3 +696,4 @@ function MockRow({
     </div>
   )
 }
+

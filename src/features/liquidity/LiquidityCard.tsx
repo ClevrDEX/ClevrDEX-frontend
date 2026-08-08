@@ -38,8 +38,10 @@ import {
 } from "@/features/tokens/useTokenBalance"
 import { useTokenList } from "@/features/tokens/useTokenList"
 import { saveTransactionHistoryEntry } from "@/features/transactions/transactionHistory"
+import { useI18n, type MessageKey } from "@/i18n"
 
 export function LiquidityCard() {
+  const { t } = useI18n()
   const chainId = useChainId()
   const { address } = useAccount()
   const publicClient = usePublicClient()
@@ -272,6 +274,7 @@ export function LiquidityCard() {
     const nextSteps = createAddLiquidityFlowSteps(
       needsApprovalA ? tokenA.symbol : undefined,
       needsApprovalB ? tokenB.symbol : undefined,
+      t,
     )
     let currentStepId = nextSteps[0]?.id ?? ""
 
@@ -293,14 +296,13 @@ export function LiquidityCard() {
         updateFlowStep(setFlowSteps, currentStepId, {
           status: "confirming",
           hash: approveHash,
-          description:
-            "Approval submitted. Waiting for the token allowance to update.",
+          description: t("liquidity.approvalSubmitted"),
         })
         const approveReceipt = await publicClient.waitForTransactionReceipt({
           hash: approveHash,
         })
         if (approveReceipt.status !== "success") {
-          throw new Error("Approval transaction reverted.")
+          throw new Error(t("common.approvalReverted"))
         }
         await waitForAllowance(() => allowanceAQuery.refetch(), parsedAmountA)
         updateFlowStep(setFlowSteps, currentStepId, { status: "success" })
@@ -319,14 +321,13 @@ export function LiquidityCard() {
         updateFlowStep(setFlowSteps, currentStepId, {
           status: "confirming",
           hash: approveHash,
-          description:
-            "Approval submitted. Waiting for the token allowance to update.",
+          description: t("liquidity.approvalSubmitted"),
         })
         const approveReceipt = await publicClient.waitForTransactionReceipt({
           hash: approveHash,
         })
         if (approveReceipt.status !== "success") {
-          throw new Error("Approval transaction reverted.")
+          throw new Error(t("common.approvalReverted"))
         }
         await waitForAllowance(() => allowanceBQuery.refetch(), parsedAmountB)
         updateFlowStep(setFlowSteps, currentStepId, { status: "success" })
@@ -353,14 +354,13 @@ export function LiquidityCard() {
       updateFlowStep(setFlowSteps, currentStepId, {
         status: "confirming",
         hash: addHash,
-        description:
-          "Liquidity transaction submitted. You can close this window while it confirms on-chain.",
+        description: t("liquidity.addSubmitted"),
       })
       const addReceipt = await publicClient.waitForTransactionReceipt({
         hash: addHash,
       })
       if (addReceipt.status !== "success") {
-        throw new Error("Add liquidity transaction reverted.")
+        throw new Error(t("liquidity.addReverted"))
       }
       updateFlowStep(setFlowSteps, currentStepId, { status: "success" })
       saveTransactionHistoryEntry({
@@ -369,7 +369,7 @@ export function LiquidityCard() {
         account: address,
         hash: addHash,
         title: `Add ${tokenA.symbol}/${tokenB.symbol}`,
-        summary: `Added ${formatUnits(parsedAmountA, tokenA.decimals)} ${tokenA.symbol} and ${formatUnits(parsedAmountB, tokenB.decimals)} ${tokenB.symbol}.`,
+        summary: `${t("history.kind.add")} ${formatUnits(parsedAmountA, tokenA.decimals)} ${tokenA.symbol} + ${formatUnits(parsedAmountB, tokenB.decimals)} ${tokenB.symbol}.`,
         primaryAmount: `${formatUnits(parsedAmountA, tokenA.decimals)} ${tokenA.symbol}`,
         secondaryAmount: `${formatUnits(parsedAmountB, tokenB.decimals)} ${tokenB.symbol}`,
       })
@@ -383,7 +383,7 @@ export function LiquidityCard() {
         reservesQuery.refetch(),
       ])
     } catch (err) {
-      const message = getReadableError(err)
+      const message = getReadableError(err, t)
       setError(message)
       setFlowError(message)
       updateFlowStep(setFlowSteps, currentStepId, { status: "error" })
@@ -451,22 +451,22 @@ export function LiquidityCard() {
   return (
     <section className="swap-card liquidity-card">
       <SwapCardHeader
-        kicker="Pool operations"
-        title="Add Liquidity"
+        kicker={t("liquidity.kicker")}
+        title={t("liquidity.titleAdd")}
         actions={
-          <nav className="liquidity-tabs" aria-label="Liquidity actions">
+          <nav className="liquidity-tabs" aria-label={t("liquidity.actions")}>
             <Link className="active" href="/liquidity/add">
-              Add
+              {t("liquidity.add")}
             </Link>
-            <Link href="/liquidity/remove">Remove</Link>
+            <Link href="/liquidity/remove">{t("liquidity.remove")}</Link>
           </nav>
         }
-        settingsLabel="Liquidity settings"
+        settingsLabel={t("liquidity.settings")}
         onSettingsClick={() => setSettingsOpen(true)}
       />
 
       <LiquidityField
-        label="Token A"
+        label={t("liquidity.tokenA")}
         token={tokenA}
         amount={amountA}
         balance={balanceA}
@@ -484,7 +484,7 @@ export function LiquidityCard() {
       <div className="liquidity-pair-divider">+</div>
 
       <LiquidityField
-        label="Token B"
+        label={t("liquidity.tokenB")}
         token={tokenB}
         amount={amountB}
         balance={balanceB}
@@ -501,15 +501,16 @@ export function LiquidityCard() {
 
       {isFirstProvision && tokenA && tokenB ? (
         <p className="status">
-          This is the first liquidity for the {tokenA.symbol}/{tokenB.symbol}{" "}
-          pair. You set the initial price — enter any ratio of the two amounts.
+          {t("liquidity.firstProvision", {
+            pair: `${tokenA.symbol}/${tokenB.symbol}`,
+          })}
         </p>
       ) : null}
 
       <div className="quote-panel">
         {ratioLocked && tokenA && tokenB ? (
           <div className="quote-row">
-            <span>Pool ratio</span>
+            <span>{t("liquidity.poolRatio")}</span>
             <strong>
               1 {tokenA.symbol} ={" "}
               {formatUnits(
@@ -525,11 +526,19 @@ export function LiquidityCard() {
           </div>
         ) : null}
         <div className="quote-row">
-          <span>Minimum {tokenA?.symbol ?? "Token A"}</span>
+          <span>
+            {t("liquidity.minimumToken", {
+              symbol: tokenA?.symbol ?? t("liquidity.tokenA"),
+            })}
+          </span>
           <strong>{formatMinimum(amountAMin, tokenA)}</strong>
         </div>
         <div className="quote-row">
-          <span>Minimum {tokenB?.symbol ?? "Token B"}</span>
+          <span>
+            {t("liquidity.minimumToken", {
+              symbol: tokenB?.symbol ?? t("liquidity.tokenB"),
+            })}
+          </span>
           <strong>{formatMinimum(amountBMin, tokenB)}</strong>
         </div>
       </div>
@@ -547,7 +556,7 @@ export function LiquidityCard() {
           </a>
         ) : (
           <button className="primary-button" disabled type="button">
-            {complianceMessage || "Checking A-Pass compliance..."}
+            {complianceMessage || t("common.checkingCompliance")}
           </button>
         )
       ) : (
@@ -558,10 +567,10 @@ export function LiquidityCard() {
           onClick={executeAddLiquidityFlow}
         >
           {flowRunning || isPending
-            ? "Processing..."
+            ? t("common.processing")
             : needsApprovalA || needsApprovalB
-              ? "Approve and Add Liquidity"
-              : "Add Liquidity"}
+              ? t("liquidity.approveAndAdd")
+              : t("liquidity.addAction")}
         </button>
       )}
 
@@ -573,12 +582,13 @@ export function LiquidityCard() {
         complianceMessage=""
         txSuccess={txSuccess}
         error={error}
+        t={t}
       />
 
       <TransactionSettingsModal
         open={settingsOpen}
-        title="Liquidity settings"
-        description="Adjust slippage tolerance and transaction deadline."
+        title={t("liquidity.settings")}
+        description={t("common.adjustSettings")}
         slippage={slippage}
         deadline={deadline}
         onSlippageChange={setSlippage}
@@ -588,8 +598,8 @@ export function LiquidityCard() {
 
       <TransactionFlowModal
         open={flowOpen}
-        title="Add liquidity progress"
-        description="Approve required tokens first, then add liquidity."
+        title={t("liquidity.addProgressTitle")}
+        description={t("liquidity.addProgressDescription")}
         steps={flowSteps}
         error={flowError}
         onClose={() => setFlowOpen(false)}
@@ -613,12 +623,14 @@ function LiquidityField({
   onAmountChange: (amount: string) => void
   tokenSelect: ReactNode
 }) {
+  const { t } = useI18n()
+
   return (
     <div className="field">
       <div className="field-label">
         <span>{label}</span>
         <span className="field-balance">
-          Balance:{" "}
+          {t("common.balance")}{" "}
           {token
             ? formatTokenBalance(balance, token.decimals, token.symbol)
             : "—"}
@@ -646,6 +658,7 @@ function LiquidityStatus({
   complianceMessage,
   txSuccess,
   error,
+  t,
 }: {
   deploymentReady: boolean
   sameToken: boolean
@@ -654,6 +667,7 @@ function LiquidityStatus({
   complianceMessage: string
   txSuccess: boolean
   error: string
+  t: (key: MessageKey, params?: Record<string, string | number>) => string
 }) {
   if (error) {
     return <p className="status error">{error}</p>
@@ -662,17 +676,17 @@ function LiquidityStatus({
   if (!deploymentReady) {
     return (
       <p className="status">
-        Configure the A-Pass router in <code>src/chains/deployments.ts</code>.
+        {t("common.configureRouter")} <code>src/chains/deployments.ts</code>.
       </p>
     )
   }
 
   if (sameToken) {
-    return <p className="status error">Choose two different tokens.</p>
+    return <p className="status error">{t("liquidity.sameToken")}</p>
   }
 
   if (insufficientBalance) {
-    return <p className="status error">Insufficient balance.</p>
+    return <p className="status error">{t("common.insufficientBalance")}</p>
   }
 
   if (complianceMessage) {
@@ -680,19 +694,19 @@ function LiquidityStatus({
   }
 
   if (complianceLoading) {
-    return <p className="status">Checking A-Pass compliance...</p>
+    return <p className="status">{t("common.checkingCompliance")}</p>
   }
 
   if (txSuccess) {
     return (
       <p className="status success">
-        <strong>Liquidity added.</strong>
-        <span>The confirmed transaction was saved to local history.</span>
+        <strong>{t("liquidity.added")}</strong>
+        <span>{t("common.savedToHistory")}</span>
       </p>
     )
   }
 
-  return <p className="status">Add ERC20 liquidity with slippage protection.</p>
+  return <p className="status">{t("liquidity.addStatus")}</p>
 }
 
 function parseTokenAmount(amount: string, token?: TokenInfo) {
@@ -715,14 +729,18 @@ function formatMinimum(amount: bigint, token?: TokenInfo) {
   return `${formatUnits(amount, token.decimals)} ${token.symbol}`
 }
 
-function createAddLiquidityFlowSteps(tokenASymbol?: string, tokenBSymbol?: string) {
+function createAddLiquidityFlowSteps(
+  tokenASymbol: string | undefined,
+  tokenBSymbol: string | undefined,
+  t: (key: MessageKey, params?: Record<string, string | number>) => string,
+) {
   const steps: TransactionFlowStep[] = []
 
   if (tokenASymbol) {
     steps.push({
       id: "approve-a",
-      label: `Approve ${tokenASymbol}`,
-      description: "Grant the router permission to spend the first token.",
+      label: t("swap.approveLabel", { symbol: tokenASymbol }),
+      description: t("liquidity.approveFirst"),
       status: "pending",
     })
   }
@@ -730,16 +748,16 @@ function createAddLiquidityFlowSteps(tokenASymbol?: string, tokenBSymbol?: strin
   if (tokenBSymbol) {
     steps.push({
       id: "approve-b",
-      label: `Approve ${tokenBSymbol}`,
-      description: "Grant the router permission to spend the second token.",
+      label: t("swap.approveLabel", { symbol: tokenBSymbol }),
+      description: t("liquidity.approveSecond"),
       status: "pending",
     })
   }
 
   steps.push({
     id: "add",
-    label: "Add liquidity",
-    description: "Deposit both tokens after approvals are ready.",
+    label: t("liquidity.addStepLabel"),
+    description: t("liquidity.addStepDescription"),
     status: "pending",
   })
 
@@ -768,7 +786,10 @@ function getFallbackTokenAddress(
   )
 }
 
-function getReadableError(error: unknown) {
+function getReadableError(
+  error: unknown,
+  t: (key: MessageKey, params?: Record<string, string | number>) => string,
+) {
   if (error instanceof Error) {
     const message = error.message
     const normalizedMessage = message.toLowerCase()
@@ -777,14 +798,14 @@ function getReadableError(error: unknown) {
       normalizedMessage.includes("user rejected") ||
       normalizedMessage.includes("user denied")
     ) {
-      return "Transaction rejected in wallet."
+      return t("common.transactionRejected")
     }
 
     return (
       message.split(/\n| Request Arguments:| Contract Call:| Details:/)[0] ||
-      "Transaction failed."
+      t("common.transactionFailed")
     )
   }
 
-  return "Transaction failed."
+  return t("common.transactionFailed")
 }

@@ -10,6 +10,7 @@ import {
   useTokenBalances,
 } from "@/features/tokens/useTokenBalance"
 import { TokenAvatar } from "@/features/tokens/TokenAvatar"
+import { useI18n } from "@/i18n"
 
 export function TokenSelect({
   tokens,
@@ -22,6 +23,7 @@ export function TokenSelect({
   onChange: (value: `0x${string}` | "") => void
   owner?: `0x${string}`
 }) {
+  const { t } = useI18n()
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState("")
   const selectedToken = tokens.find((token) => token.address === value)
@@ -64,7 +66,7 @@ export function TokenSelect({
             </span>
           </>
         ) : (
-          <span className="token-select-placeholder">Select token</span>
+          <span className="token-select-placeholder">{t("common.selectToken")}</span>
         )}
         <span className="token-select-chevron" aria-hidden="true">
           ▾
@@ -78,18 +80,18 @@ export function TokenSelect({
                 className="token-modal"
                 role="dialog"
                 aria-modal="true"
-                aria-label="Select a token"
+                aria-label={t("token.selectAria")}
                 onClick={(event) => event.stopPropagation()}
               >
                 <div className="token-menu-header">
                   <div>
-                    <strong>Select a token</strong>
-                    <span>Search tokens from the configured token list</span>
+                    <strong>{t("common.selectToken")}</strong>
+                    <span>{t("token.searchSubtitle")}</span>
                   </div>
                   <button
                     className="token-modal-close"
                     type="button"
-                    aria-label="Close token selector"
+                    aria-label={t("token.closeSelector")}
                     onClick={() => setOpen(false)}
                   >
                     <CloseIcon />
@@ -98,7 +100,7 @@ export function TokenSelect({
                 <input
                   className="token-search-input"
                   autoFocus
-                  placeholder="Search name, symbol or address"
+                  placeholder={t("token.searchPlaceholder")}
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
                 />
@@ -140,9 +142,7 @@ export function TokenSelect({
                 </div>
 
                 {filteredTokens.length === 0 ? (
-                  <p className="token-empty">
-                    No token found in the configured token list.
-                  </p>
+                  <p className="token-empty">{t("token.empty")}</p>
                 ) : null}
               </div>
             </div>,

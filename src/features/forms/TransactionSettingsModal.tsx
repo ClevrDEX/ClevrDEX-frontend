@@ -10,6 +10,7 @@ import {
   sanitizeDecimalInput,
   sanitizeIntegerInput,
 } from "@/features/forms/numericInput"
+import { useI18n } from "@/i18n"
 
 type TransactionSettingsModalProps = {
   open: boolean
@@ -32,6 +33,8 @@ export function TransactionSettingsModal({
   onDeadlineChange,
   onClose,
 }: TransactionSettingsModalProps) {
+  const { t } = useI18n()
+
   useEffect(() => {
     if (!open) {
       return
@@ -72,7 +75,7 @@ export function TransactionSettingsModal({
           <button
             className="token-modal-close"
             type="button"
-            aria-label="Close settings"
+            aria-label={t("common.closeSettings")}
             onClick={onClose}
           >
             <CloseIcon />
@@ -81,7 +84,7 @@ export function TransactionSettingsModal({
 
         <div className="settings-modal-body">
           <div className="setting-box">
-            <label htmlFor="transaction-slippage">Max slippage</label>
+            <label htmlFor="transaction-slippage">{t("common.maxSlippage")}</label>
             <div className="slippage-control">
               <input
                 id="transaction-slippage"
@@ -98,7 +101,9 @@ export function TransactionSettingsModal({
           </div>
 
           <div className="setting-box">
-            <label htmlFor="transaction-deadline">Transaction window</label>
+            <label htmlFor="transaction-deadline">
+              {t("common.transactionWindow")}
+            </label>
             <div className="slippage-control">
               <input
                 id="transaction-deadline"
@@ -110,7 +115,7 @@ export function TransactionSettingsModal({
                   onDeadlineChange(sanitizeIntegerInput(event.target.value))
                 }
               />
-              <span>min</span>
+              <span>{t("common.min")}</span>
             </div>
           </div>
         </div>

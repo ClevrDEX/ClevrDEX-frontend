@@ -6,6 +6,7 @@ import { useState } from "react"
 import { WagmiProvider } from "wagmi"
 
 import { wagmiConfig } from "@/chains/wagmi"
+import { I18nProvider } from "@/i18n"
 
 export function AppProviders({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(() => new QueryClient())
@@ -13,7 +14,9 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
   return (
     <WagmiProvider config={wagmiConfig}>
       <QueryClientProvider client={queryClient}>
-        <RainbowKitProvider>{children}</RainbowKitProvider>
+        <I18nProvider>
+          <RainbowKitProvider>{children}</RainbowKitProvider>
+        </I18nProvider>
       </QueryClientProvider>
     </WagmiProvider>
   )

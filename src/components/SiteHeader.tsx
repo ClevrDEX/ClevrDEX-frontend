@@ -6,25 +6,41 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useEffect, useState } from "react"
 
+import { useI18n, type Locale, type MessageKey } from "@/i18n"
+
 type SiteHeaderProps = {
   activeNav: "home" | "swap" | "liquidity"
 }
 
 const NAV_ITEMS = [
-  { id: "home" as const, href: "/", label: "Home" },
-  { id: "swap" as const, href: "/swap", label: "Swap" },
-  { id: "liquidity" as const, href: "/liquidity/add", label: "Liquidity" },
-]
+  { id: "home" as const, href: "/", labelKey: "nav.home" },
+  { id: "swap" as const, href: "/swap", labelKey: "nav.swap" },
+  { id: "liquidity" as const, href: "/liquidity/add", labelKey: "nav.liquidity" },
+] satisfies {
+  id: string
+  href: string
+  labelKey: MessageKey
+}[]
 
 const LANDING_NAV_ITEMS = [
-  { id: "product", href: "#product", label: "Product" },
-  { id: "how", href: "#how", label: "How it works" },
-  { id: "usecases", href: "#usecases", label: "Use cases" },
-  { id: "faq", href: "#faq", label: "FAQ" },
+  { id: "product", href: "#product", labelKey: "nav.product" },
+  { id: "how", href: "#how", labelKey: "nav.how" },
+  { id: "usecases", href: "#usecases", labelKey: "nav.useCases" },
+  { id: "faq", href: "#faq", labelKey: "nav.faq" },
+] satisfies {
+  id: string
+  href: string
+  labelKey: MessageKey
+}[]
+
+const LOCALES: { locale: Locale; labelKey: MessageKey }[] = [
+  { locale: "en", labelKey: "language.en" },
+  { locale: "zh-HK", labelKey: "language.zhHK" },
 ]
 
 export function SiteHeader({ activeNav }: SiteHeaderProps) {
   const pathname = usePathname()
+  const { locale, setLocale, t } = useI18n()
   const [menuOpen, setMenuOpen] = useState(false)
   const navItems = activeNav === "home" ? LANDING_NAV_ITEMS : NAV_ITEMS
   const isActiveNavItem = (itemId: string) =>
@@ -69,28 +85,40 @@ export function SiteHeader({ activeNav }: SiteHeaderProps) {
           />
           <span className="brand-copy">
             <span className="brand-title">ClevrSwap</span>
-            <span className="brand-subtitle">Built on Cleanverse</span>
+            <span className="brand-subtitle">{t("brand.subtitle")}</span>
           </span>
         </Link>
       </div>
       <div className="header-actions">
-        <nav className="app-nav" aria-label="Primary navigation">
+        <nav className="app-nav" aria-label={t("nav.primary")}>
           {navItems.map((item) => (
             <Link
               key={item.id}
               className={isActiveNavItem(item.id) ? "active" : undefined}
               href={item.href}
             >
-              {item.label}
+              {t(item.labelKey)}
             </Link>
           ))}
         </nav>
+        <div className="lang-switch" aria-label={t("language.switch")}>
+          {LOCALES.map((item) => (
+            <button
+              key={item.locale}
+              type="button"
+              className={locale === item.locale ? "active" : undefined}
+              onClick={() => setLocale(item.locale)}
+            >
+              {t(item.labelKey)}
+            </button>
+          ))}
+        </div>
         <button
           type="button"
           className="mobile-nav-toggle"
           aria-expanded={menuOpen}
           aria-controls="mobile-nav-panel"
-          aria-label={menuOpen ? "Close navigation menu" : "Open navigation menu"}
+          aria-label={menuOpen ? t("nav.close") : t("nav.open")}
           onClick={() => setMenuOpen((open) => !open)}
         >
           <svg
@@ -126,7 +154,7 @@ export function SiteHeader({ activeNav }: SiteHeaderProps) {
       <nav
         id="mobile-nav-panel"
         className="mobile-nav-panel"
-        aria-label="Mobile navigation"
+        aria-label={t("nav.mobile")}
         aria-hidden={!menuOpen}
       >
         {navItems.map((item) => (
@@ -136,7 +164,7 @@ export function SiteHeader({ activeNav }: SiteHeaderProps) {
             href={item.href}
             onClick={() => setMenuOpen(false)}
           >
-            {item.label}
+            {t(item.labelKey)}
           </Link>
         ))}
       </nav>

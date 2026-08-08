@@ -43,11 +43,13 @@ import {
   type LpPosition,
 } from "@/features/liquidity/useLpPositions"
 import { saveTransactionHistoryEntry } from "@/features/transactions/transactionHistory"
+import { useI18n, type MessageKey } from "@/i18n"
 
 const LP_DECIMALS = 18
 const PERCENTAGE_PRESETS = [25, 50, 75, 100] as const
 
 export function RemoveLiquidityCard() {
+  const { t } = useI18n()
   const chainId = useChainId()
   const { address } = useAccount()
   const deployment = getDexDeployment(chainId)
@@ -109,8 +111,8 @@ export function RemoveLiquidityCard() {
 
       <TransactionSettingsModal
         open={settingsOpen}
-        title="Liquidity settings"
-        description="Adjust slippage tolerance and transaction deadline."
+        title={t("liquidity.settings")}
+        description={t("common.adjustSettings")}
         slippage={slippage}
         deadline={deadline}
         onSlippageChange={setSlippage}
@@ -130,16 +132,18 @@ function RemoveLiquidityHeader({
   onBack: () => void
   onSettingsOpen: () => void
 }) {
+  const { t } = useI18n()
+
   return (
     <SwapCardHeader
-      kicker="Pool operations"
-      title="Remove Liquidity"
+      kicker={t("liquidity.kicker")}
+      title={t("liquidity.titleRemove")}
       leading={
         selectedPosition ? (
           <button
             className="back-button"
             type="button"
-            aria-label="Back to positions"
+            aria-label={t("liquidity.backToPositions")}
             onClick={onBack}
           >
             ←
@@ -147,14 +151,14 @@ function RemoveLiquidityHeader({
         ) : null
       }
       actions={
-        <nav className="liquidity-tabs" aria-label="Liquidity actions">
-          <Link href="/liquidity/add">Add</Link>
+        <nav className="liquidity-tabs" aria-label={t("liquidity.actions")}>
+          <Link href="/liquidity/add">{t("liquidity.add")}</Link>
           <Link className="active" href="/liquidity/remove">
-            Remove
+            {t("liquidity.remove")}
           </Link>
         </nav>
       }
-      settingsLabel="Liquidity settings"
+      settingsLabel={t("liquidity.settings")}
       onSettingsClick={onSettingsOpen}
     />
   )
@@ -173,30 +177,30 @@ function PositionList({
   isLoading: boolean
   onSelect: (position: LpPosition) => void
 }) {
+  const { t } = useI18n()
+
   if (!deploymentReady) {
     return (
       <p className="status">
-        Configure the A-Pass router in <code>src/chains/deployments.ts</code>.
+        {t("common.configureRouter")} <code>src/chains/deployments.ts</code>.
       </p>
     )
   }
 
   if (!address) {
-    return (
-      <p className="status">Connect your wallet to view liquidity positions.</p>
-    )
+    return <p className="status">{t("liquidity.connectPositions")}</p>
   }
 
   if (isLoading) {
-    return <p className="status">Loading your positions...</p>
+    return <p className="status">{t("liquidity.loadingPositions")}</p>
   }
 
   if (positions.length === 0) {
     return (
       <div className="lp-empty-state">
-        <p className="status">You don&apos;t have any open liquidity positions.</p>
+        <p className="status">{t("liquidity.noPositions")}</p>
         <Link className="primary-button" href="/liquidity/add">
-          Add liquidity
+          {t("liquidity.addAction")}
         </Link>
       </div>
     )
@@ -204,7 +208,7 @@ function PositionList({
 
   return (
     <div className="lp-positions lp-positions-main">
-      <span className="lp-positions-label">Your positions</span>
+      <span className="lp-positions-label">{t("liquidity.yourPositions")}</span>
       {positions.map((position) => (
         <button
           key={position.pairAddress}
@@ -217,7 +221,7 @@ function PositionList({
               {position.tokenA.symbol}/{position.tokenB.symbol}
             </strong>
             <span className="lp-position-share">
-              {position.poolShare.toFixed(4)}% pool share
+              {position.poolShare.toFixed(4)}% {t("liquidity.poolShare")}
             </span>
           </div>
           <div className="lp-position-details">
@@ -246,6 +250,7 @@ function RemovePositionForm({
   deadline: string
   onComplete: () => void
 }) {
+  const { t } = useI18n()
   const { address } = useAccount()
   const chainId = useChainId()
   const deployment = getDexDeployment(chainId)
@@ -437,7 +442,7 @@ function RemovePositionForm({
       return
     }
 
-    const nextSteps = createRemoveLiquidityFlowSteps(needsApproval)
+    const nextSteps = createRemoveLiquidityFlowSteps(needsApproval, t)
     let currentStepId = nextSteps[0]?.id ?? ""
 
     setFlowSteps(nextSteps)
@@ -458,14 +463,13 @@ function RemovePositionForm({
         updateFlowStep(setFlowSteps, currentStepId, {
           status: "confirming",
           hash: approveHash,
-          description:
-            "Approval submitted. Waiting for the LP allowance to update.",
+          description: t("liquidity.lpApprovalSubmitted"),
         })
         const approveReceipt = await publicClient.waitForTransactionReceipt({
           hash: approveHash,
         })
         if (approveReceipt.status !== "success") {
-          throw new Error("Approval transaction reverted.")
+          throw new Error(t("common.approvalReverted"))
         }
         await waitForAllowance(() => lpAllowanceQuery.refetch(), parsedLpAmount)
         updateFlowStep(setFlowSteps, currentStepId, { status: "success" })
@@ -491,14 +495,13 @@ function RemovePositionForm({
       updateFlowStep(setFlowSteps, currentStepId, {
         status: "confirming",
         hash: removeHash,
-        description:
-          "Removal transaction submitted. You can close this window while it confirms on-chain.",
+        description: t("liquidity.removeSubmitted"),
       })
       const removeReceipt = await publicClient.waitForTransactionReceipt({
         hash: removeHash,
       })
       if (removeReceipt.status !== "success") {
-        throw new Error("Remove liquidity transaction reverted.")
+        throw new Error(t("liquidity.removeReverted"))
       }
       updateFlowStep(setFlowSteps, currentStepId, { status: "success" })
       saveTransactionHistoryEntry({
@@ -507,7 +510,7 @@ function RemovePositionForm({
         account: address,
         hash: removeHash,
         title: `Remove ${tokenA.symbol}/${tokenB.symbol}`,
-        summary: `Removed ${formatOutput(parsedAmount0, token0)} and ${formatOutput(parsedAmount1, token1)}.`,
+        summary: `${t("history.kind.remove")} ${formatOutput(parsedAmount0, token0)} + ${formatOutput(parsedAmount1, token1)}.`,
         primaryAmount: formatOutput(parsedAmount0, token0),
         secondaryAmount: formatOutput(parsedAmount1, token1),
       })
@@ -519,7 +522,7 @@ function RemovePositionForm({
       ])
       onComplete()
     } catch (err) {
-      const message = getReadableError(err)
+      const message = getReadableError(err, t)
       setError(message)
       setFlowError(message)
       updateFlowStep(setFlowSteps, currentStepId, { status: "error" })
@@ -633,7 +636,7 @@ function RemovePositionForm({
 
         <div className="remove-lp-meta">
           <div className="remove-lp-meta-row">
-            <span>LP tokens</span>
+            <span>{t("liquidity.lpTokens")}</span>
             <strong>
               {parsedLpAmount > 0n
                 ? formatTokenBalance(parsedLpAmount, LP_DECIMALS, "LP")
@@ -642,8 +645,14 @@ function RemovePositionForm({
           </div>
           {parsedLpAmount > 0n ? (
             <div className="remove-lp-meta-minimums">
-              <span>Min {token0.symbol}: {formatOutput(amount0Min, token0)}</span>
-              <span>Min {token1.symbol}: {formatOutput(amount1Min, token1)}</span>
+              <span>
+                {t("liquidity.minToken", { symbol: token0.symbol })}:{" "}
+                {formatOutput(amount0Min, token0)}
+              </span>
+              <span>
+                {t("liquidity.minToken", { symbol: token1.symbol })}:{" "}
+                {formatOutput(amount1Min, token1)}
+              </span>
             </div>
           ) : null}
         </div>
@@ -667,7 +676,7 @@ function RemovePositionForm({
               disabled
               type="button"
             >
-              {complianceMessage || "Checking A-Pass compliance..."}
+              {complianceMessage || t("common.checkingCompliance")}
             </button>
           )
         ) : (
@@ -678,10 +687,10 @@ function RemovePositionForm({
             onClick={executeRemoveLiquidityFlow}
           >
             {flowRunning || isPending
-              ? "Processing..."
+              ? t("common.processing")
               : needsApproval
-                ? "Approve and Remove Liquidity"
-                : "Remove Liquidity"}
+                ? t("liquidity.approveAndRemove")
+                : t("liquidity.titleRemove")}
           </button>
         )}
       </div>
@@ -692,12 +701,13 @@ function RemovePositionForm({
         complianceLoading={false}
         complianceMessage=""
         txSuccess={txSuccess}
+        t={t}
       />
 
       <TransactionFlowModal
         open={flowOpen}
-        title="Remove liquidity progress"
-        description="Approve LP tokens first if needed, then remove liquidity."
+        title={t("liquidity.removeProgressTitle")}
+        description={t("liquidity.removeProgressDescription")}
         steps={flowSteps}
         error={flowError}
         onClose={() => setFlowOpen(false)}
@@ -719,12 +729,14 @@ function RemoveTokenField({
   maxAmount: bigint
   onAmountChange: (amount: string) => void
 }) {
+  const { t } = useI18n()
+
   return (
     <div className="field">
       <div className="field-label">
         <span>{label}</span>
         <span className="field-balance">
-          Pooled:{" "}
+          {t("liquidity.pooled")}{" "}
           {formatTokenBalance(maxAmount, token.decimals, token.symbol)}
         </span>
       </div>
@@ -751,19 +763,21 @@ function RemoveFormStatus({
   complianceLoading,
   complianceMessage,
   txSuccess,
+  t,
 }: {
   error: string
   insufficientBalance: boolean
   complianceLoading: boolean
   complianceMessage: string
   txSuccess: boolean
+  t: (key: MessageKey, params?: Record<string, string | number>) => string
 }) {
   if (error) {
     return <p className="status error">{error}</p>
   }
 
   if (insufficientBalance) {
-    return <p className="status error">Exceeds pooled balance.</p>
+    return <p className="status error">{t("liquidity.exceedsPooled")}</p>
   }
 
   if (complianceMessage) {
@@ -771,14 +785,14 @@ function RemoveFormStatus({
   }
 
   if (complianceLoading) {
-    return <p className="status">Checking A-Pass compliance...</p>
+    return <p className="status">{t("common.checkingCompliance")}</p>
   }
 
   if (txSuccess) {
     return (
       <p className="status success">
-        <strong>Liquidity removed.</strong>
-        <span>The confirmed transaction was saved to local history.</span>
+        <strong>{t("liquidity.removed")}</strong>
+        <span>{t("common.savedToHistory")}</span>
       </p>
     )
   }
@@ -806,29 +820,35 @@ function formatOutput(amount: bigint, token: TokenInfo) {
   return `${formatUnits(amount, token.decimals)} ${token.symbol}`
 }
 
-function createRemoveLiquidityFlowSteps(needsApproval: boolean) {
+function createRemoveLiquidityFlowSteps(
+  needsApproval: boolean,
+  t: (key: MessageKey, params?: Record<string, string | number>) => string,
+) {
   const steps: TransactionFlowStep[] = []
 
   if (needsApproval) {
     steps.push({
       id: "approve-lp",
-      label: "Approve LP token",
-      description: "Grant the router permission to burn your LP tokens.",
+      label: t("liquidity.approveLp"),
+      description: t("liquidity.approveLpDescription"),
       status: "pending",
     })
   }
 
   steps.push({
     id: "remove",
-    label: "Remove liquidity",
-    description: "Burn LP tokens and withdraw the underlying assets.",
+    label: t("liquidity.removeStepLabel"),
+    description: t("liquidity.removeStepDescription"),
     status: "pending",
   })
 
   return steps
 }
 
-function getReadableError(error: unknown) {
+function getReadableError(
+  error: unknown,
+  t: (key: MessageKey, params?: Record<string, string | number>) => string,
+) {
   if (error instanceof Error) {
     const message = error.message
     const normalizedMessage = message.toLowerCase()
@@ -837,14 +857,14 @@ function getReadableError(error: unknown) {
       normalizedMessage.includes("user rejected") ||
       normalizedMessage.includes("user denied")
     ) {
-      return "Transaction rejected in wallet."
+      return t("common.transactionRejected")
     }
 
     return (
       message.split(/\n| Request Arguments:| Contract Call:| Details:/)[0] ||
-      "Transaction failed."
+      t("common.transactionFailed")
     )
   }
 
-  return "Transaction failed."
+  return t("common.transactionFailed")
 }

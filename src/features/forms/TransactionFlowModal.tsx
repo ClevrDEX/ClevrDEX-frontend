@@ -7,6 +7,7 @@ import { useChainId } from "wagmi"
 
 import { CloseIcon } from "@/components/CloseIcon"
 import { getTransactionExplorerUrl } from "@/chains/explorer"
+import { useI18n, type MessageKey } from "@/i18n"
 
 export type TransactionFlowStepStatus =
   | "pending"
@@ -33,15 +34,6 @@ type TransactionFlowModalProps = {
   onClose: () => void
 }
 
-const STEP_STATUS_LABELS: Record<TransactionFlowStepStatus, string> = {
-  pending: "Pending",
-  active: "Waiting for wallet",
-  confirming: "Confirming",
-  success: "Done",
-  skipped: "Skipped",
-  error: "Failed",
-}
-
 export function TransactionFlowModal({
   open,
   title,
@@ -51,6 +43,7 @@ export function TransactionFlowModal({
   onClose,
 }: TransactionFlowModalProps) {
   const chainId = useChainId()
+  const { t } = useI18n()
 
   useEffect(() => {
     if (!open) {
@@ -94,7 +87,7 @@ export function TransactionFlowModal({
           <button
             className="token-modal-close"
             type="button"
-            aria-label="Close transaction progress"
+            aria-label={t("common.closeProgress")}
             onClick={onClose}
           >
             <CloseIcon />
@@ -112,7 +105,7 @@ export function TransactionFlowModal({
                 <div>
                   <div className="transaction-flow-step-main">
                     <strong>{step.label}</strong>
-                    <span>{STEP_STATUS_LABELS[step.status]}</span>
+                    <span>{t(`flow.status.${step.status}` as MessageKey)}</span>
                   </div>
                   <p>{step.description}</p>
                   {step.hash ? (
@@ -126,15 +119,9 @@ export function TransactionFlowModal({
           {error ? <p className="status error">{error}</p> : null}
 
           {isFinalConfirming ? (
-            <p className="status">
-              The transaction has been submitted. You can close this window and
-              continue using the app while it confirms on-chain.
-            </p>
+            <p className="status">{t("flow.finalConfirming")}</p>
           ) : (
-            <p className="status">
-              Keep your wallet available for each signature. Closing this window
-              will not cancel a submitted transaction.
-            </p>
+            <p className="status">{t("flow.keepWallet")}</p>
           )}
         </div>
       </div>

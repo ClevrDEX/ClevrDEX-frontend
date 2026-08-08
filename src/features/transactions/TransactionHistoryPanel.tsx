@@ -11,8 +11,10 @@ import {
   subscribeTransactionHistory,
   type TransactionHistoryEntry,
 } from "@/features/transactions/transactionHistory"
+import { useI18n } from "@/i18n"
 
 export function TransactionHistoryPanel() {
+  const { t } = useI18n()
   const chainId = useChainId()
   const { address } = useAccount()
   const [history, setHistory] = useState<TransactionHistoryEntry[]>([])
@@ -57,7 +59,7 @@ export function TransactionHistoryPanel() {
         type="button"
         onClick={() => setOpen(true)}
       >
-        <span>Transaction History</span>
+        <span>{t("history.title")}</span>
         <strong>{visibleHistory.length}</strong>
       </button>
 
@@ -78,14 +80,14 @@ export function TransactionHistoryPanel() {
                 <div className="token-menu-header">
                   <div>
                     <strong id="transaction-history-title">
-                      Transaction History
+                      {t("history.title")}
                     </strong>
-                    <span>Recent confirmed actions saved on this device.</span>
+                    <span>{t("history.subtitle")}</span>
                   </div>
                   <button
                     className="token-modal-close"
                     type="button"
-                    aria-label="Close transaction history"
+                    aria-label={t("history.close")}
                     onClick={() => setOpen(false)}
                   >
                     <CloseIcon />
@@ -94,19 +96,17 @@ export function TransactionHistoryPanel() {
 
                 {!address ? (
                   <p className="transaction-history-empty">
-                    Connect your wallet to view transaction records.
+                    {t("history.connect")}
                   </p>
                 ) : visibleHistory.length === 0 ? (
-                  <p className="transaction-history-empty">
-                    Successful swaps and liquidity actions will appear here.
-                  </p>
+                  <p className="transaction-history-empty">{t("history.empty")}</p>
                 ) : (
                   <ol className="transaction-history-list">
                     {visibleHistory.map((entry) => (
                       <li className="transaction-history-item" key={entry.id}>
                         <div className="transaction-history-item-main">
                           <span className={`transaction-kind ${entry.kind}`}>
-                            {getKindLabel(entry.kind)}
+                            {getKindLabel(entry.kind, t)}
                           </span>
                           <time
                             dateTime={new Date(entry.timestamp).toISOString()}
@@ -166,16 +166,19 @@ function TransactionHashLink({
   )
 }
 
-function getKindLabel(kind: TransactionHistoryEntry["kind"]) {
+function getKindLabel(
+  kind: TransactionHistoryEntry["kind"],
+  t: ReturnType<typeof useI18n>["t"],
+) {
   if (kind === "add-liquidity") {
-    return "Add"
+    return t("history.kind.add")
   }
 
   if (kind === "remove-liquidity") {
-    return "Remove"
+    return t("history.kind.remove")
   }
 
-  return "Swap"
+  return t("history.kind.swap")
 }
 
 function formatTimestamp(timestamp: number) {

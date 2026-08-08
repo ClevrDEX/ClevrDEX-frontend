@@ -36,8 +36,10 @@ import {
 } from "@/features/forms/TransactionFlowModal"
 import { useTradeCompliance } from "@/compliance/useTradeCompliance"
 import { saveTransactionHistoryEntry } from "@/features/transactions/transactionHistory"
+import { useI18n, type MessageKey } from "@/i18n"
 
 export function SwapCard() {
+  const { t } = useI18n()
   const chainId = useChainId()
   const { address } = useAccount()
   const publicClient = usePublicClient()
@@ -228,7 +230,7 @@ export function SwapCard() {
       return
     }
 
-    const nextSteps = createSwapFlowSteps(needsApproval, tokenIn.symbol)
+    const nextSteps = createSwapFlowSteps(needsApproval, tokenIn.symbol, t)
     let currentStepId = nextSteps[0]?.id ?? ""
 
     setFlowSteps(nextSteps)
@@ -249,14 +251,13 @@ export function SwapCard() {
         updateFlowStep(setFlowSteps, currentStepId, {
           status: "confirming",
           hash: approveHash,
-          description:
-            "Approve submitted. Waiting for the approval to confirm on-chain.",
+          description: t("swap.approveSubmitted"),
         })
         const approveReceipt = await publicClient.waitForTransactionReceipt({
           hash: approveHash,
         })
         if (approveReceipt.status !== "success") {
-          throw new Error("Approval transaction reverted.")
+          throw new Error(t("common.approvalReverted"))
         }
         await waitForAllowance(() => allowanceQuery.refetch(), parsedAmountIn)
         updateFlowStep(setFlowSteps, currentStepId, { status: "success" })
@@ -280,14 +281,13 @@ export function SwapCard() {
       updateFlowStep(setFlowSteps, currentStepId, {
         status: "confirming",
         hash: swapHash,
-        description:
-          "Swap submitted. You can close this window while it confirms on-chain.",
+        description: t("swap.submitted"),
       })
       const swapReceipt = await publicClient.waitForTransactionReceipt({
         hash: swapHash,
       })
       if (swapReceipt.status !== "success") {
-        throw new Error("Swap transaction reverted.")
+        throw new Error(t("swap.reverted"))
       }
       updateFlowStep(setFlowSteps, currentStepId, { status: "success" })
       saveTransactionHistoryEntry({
@@ -296,14 +296,14 @@ export function SwapCard() {
         account: address,
         hash: swapHash,
         title: `${tokenIn.symbol} → ${tokenOut?.symbol ?? "Token"}`,
-        summary: `Swapped ${formatUnits(parsedAmountIn, tokenIn.decimals)} ${tokenIn.symbol} for ${formatUnits(amountOut, tokenOut?.decimals ?? 18)} ${tokenOut?.symbol ?? "Token"}.`,
+        summary: `${t("history.kind.swap")} ${formatUnits(parsedAmountIn, tokenIn.decimals)} ${tokenIn.symbol} -> ${formatUnits(amountOut, tokenOut?.decimals ?? 18)} ${tokenOut?.symbol ?? "Token"}.`,
         primaryAmount: `${formatUnits(parsedAmountIn, tokenIn.decimals)} ${tokenIn.symbol}`,
         secondaryAmount: `${formatUnits(amountOut, tokenOut?.decimals ?? 18)} ${tokenOut?.symbol ?? "Token"}`,
       })
       setTxSuccess(true)
       await Promise.all([allowanceQuery.refetch(), balanceInQuery.refetch()])
     } catch (err) {
-      const message = getReadableError(err)
+      const message = getReadableError(err, t)
       setError(message)
       setFlowError(message)
       updateFlowStep(setFlowSteps, currentStepId, { status: "error" })
@@ -345,17 +345,17 @@ export function SwapCard() {
   return (
     <section className="swap-card">
       <SwapCardHeader
-        kicker="A-Pass router"
-        title="Compliance Swap"
-        settingsLabel="Swap settings"
+        kicker={t("swap.kicker")}
+        title={t("swap.title")}
+        settingsLabel={t("swap.settings")}
         onSettingsClick={() => setSettingsOpen(true)}
       />
 
       <div className="field">
         <div className="field-label">
-          <span>From</span>
+          <span>{t("swap.from")}</span>
           <span className="field-balance">
-            Balance:{" "}
+            {t("common.balance")}{" "}
             {tokenIn
               ? formatTokenBalance(balanceIn, tokenIn.decimals, tokenIn.symbol)
               : "—"}
@@ -386,8 +386,8 @@ export function SwapCard() {
 
       <div className="field">
         <div className="field-label">
-          <span>To</span>
-          <span>{tokenOut ? tokenOut.name : "Select token"}</span>
+          <span>{t("swap.to")}</span>
+          <span>{tokenOut ? tokenOut.name : t("common.selectToken")}</span>
         </div>
         <div className="field-row">
           <input
@@ -411,7 +411,7 @@ export function SwapCard() {
 
       <div className="quote-panel">
         <div className="quote-row">
-          <span>Best path</span>
+          <span>{t("swap.bestPath")}</span>
           <strong>
             {bestQuote && tokenIn && tokenOut
               ? bestQuote.path
@@ -427,7 +427,7 @@ export function SwapCard() {
           </strong>
         </div>
         <div className="quote-row">
-          <span>Minimum received</span>
+          <span>{t("swap.minimumReceived")}</span>
           <strong>
             {tokenOut && minimumReceived > 0n
               ? `${formatUnits(minimumReceived, tokenOut.decimals)} ${tokenOut.symbol}`
@@ -449,7 +449,7 @@ export function SwapCard() {
           </a>
         ) : (
           <button className="primary-button" disabled type="button">
-            {complianceMessage || "Checking A-Pass compliance..."}
+            {complianceMessage || t("common.checkingCompliance")}
           </button>
         )
       ) : (
@@ -460,10 +460,10 @@ export function SwapCard() {
           onClick={executeSwapFlow}
         >
           {flowRunning || isPending
-            ? "Processing..."
+            ? t("common.processing")
             : needsApproval
-              ? `Approve ${tokenIn?.symbol ?? ""} and Swap`
-              : "Swap"}
+              ? t("swap.approveAndSwap", { symbol: tokenIn?.symbol ?? "" })
+              : t("swap.action")}
         </button>
       )}
 
@@ -476,12 +476,13 @@ export function SwapCard() {
         complianceMessage=""
         txSuccess={txSuccess}
         error={error}
+        t={t}
       />
 
       <TransactionSettingsModal
         open={settingsOpen}
-        title="Swap settings"
-        description="Adjust slippage tolerance and transaction deadline."
+        title={t("swap.settings")}
+        description={t("common.adjustSettings")}
         slippage={slippage}
         deadline={deadline}
         onSlippageChange={setSlippage}
@@ -491,8 +492,8 @@ export function SwapCard() {
 
       <TransactionFlowModal
         open={flowOpen}
-        title="Swap progress"
-        description="Approve first if needed, then execute the swap."
+        title={t("swap.progressTitle")}
+        description={t("swap.progressDescription")}
         steps={flowSteps}
         error={flowError}
         onClose={() => setFlowOpen(false)}
@@ -510,6 +511,7 @@ function Status({
   complianceMessage,
   txSuccess,
   error,
+  t,
 }: {
   deploymentReady: boolean
   quoteLoading: boolean
@@ -519,6 +521,7 @@ function Status({
   complianceMessage: string
   txSuccess: boolean
   error: string
+  t: (key: MessageKey, params?: Record<string, string | number>) => string
 }) {
   if (error) {
     return <p className="status error">{error}</p>
@@ -527,13 +530,13 @@ function Status({
   if (!deploymentReady) {
     return (
       <p className="status">
-        Configure the A-Pass router in <code>src/chains/deployments.ts</code>.
+        {t("common.configureRouter")} <code>src/chains/deployments.ts</code>.
       </p>
     )
   }
 
   if (insufficientBalance) {
-    return <p className="status error">Insufficient balance.</p>
+    return <p className="status error">{t("common.insufficientBalance")}</p>
   }
 
   if (complianceMessage) {
@@ -541,27 +544,27 @@ function Status({
   }
 
   if (complianceLoading) {
-    return <p className="status">Checking A-Pass compliance...</p>
+    return <p className="status">{t("common.checkingCompliance")}</p>
   }
 
   if (quoteLoading) {
-    return <p className="status">Refreshing quote...</p>
+    return <p className="status">{t("swap.statusRefreshing")}</p>
   }
 
   if (quoteError) {
-    return <p className="status error">No route found for this amount.</p>
+    return <p className="status error">{t("swap.statusNoRoute")}</p>
   }
 
   if (txSuccess) {
     return (
       <p className="status success">
-        <strong>Transaction confirmed.</strong>
-        <span>Your swap was saved to local transaction history.</span>
+        <strong>{t("common.transactionConfirmed")}</strong>
+        <span>{t("swap.statusSaved")}</span>
       </p>
     )
   }
 
-  return <p className="status">Compliance-ready ERC20 swap route is active.</p>
+  return <p className="status">{t("swap.statusActive")}</p>
 }
 
 function isSameAddress(
@@ -596,22 +599,26 @@ function getPathPairs(path: `0x${string}`[]) {
   return pairs
 }
 
-function createSwapFlowSteps(needsApproval: boolean, tokenSymbol: string) {
+function createSwapFlowSteps(
+  needsApproval: boolean,
+  tokenSymbol: string,
+  t: (key: MessageKey, params?: Record<string, string | number>) => string,
+) {
   const steps: TransactionFlowStep[] = []
 
   if (needsApproval) {
     steps.push({
       id: "approve",
-      label: `Approve ${tokenSymbol}`,
-      description: "Grant the router permission to spend the input token.",
+      label: t("swap.approveLabel", { symbol: tokenSymbol }),
+      description: t("swap.approveDescription"),
       status: "pending",
     })
   }
 
   steps.push({
     id: "swap",
-    label: "Swap",
-    description: "Execute the swap after approval is ready.",
+    label: t("swap.stepLabel"),
+    description: t("swap.stepDescription"),
     status: "pending",
   })
 
@@ -626,7 +633,10 @@ function getTokenSymbol(tokens: TokenInfo[], tokenAddress: `0x${string}`) {
   )
 }
 
-function getReadableError(error: unknown) {
+function getReadableError(
+  error: unknown,
+  t: (key: MessageKey, params?: Record<string, string | number>) => string,
+) {
   if (error instanceof Error) {
     const message = error.message
     const normalizedMessage = message.toLowerCase()
@@ -635,14 +645,14 @@ function getReadableError(error: unknown) {
       normalizedMessage.includes("user rejected") ||
       normalizedMessage.includes("user denied")
     ) {
-      return "Transaction rejected in wallet."
+      return t("common.transactionRejected")
     }
 
     return (
       message.split(/\n| Request Arguments:| Contract Call:| Details:/)[0] ||
-      "Transaction failed."
+      t("common.transactionFailed")
     )
   }
 
-  return "Transaction failed."
+  return t("common.transactionFailed")
 }
