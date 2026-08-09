@@ -53,11 +53,11 @@ const baseSepoliaAUsdc = {
 export const DEX_DEPLOYMENTS: Record<number, DexDeployment> = {
   [baseSepolia.id]: {
     chain: baseSepolia,
-    factory: "0x25BbF775E3e090102F71417e3d15DDB8a0C3819a",
-    router: "0x3EA0541aB5cE4c6831CC496931D21F9F471f433b",
+    factory: "0xC3DAcb2714db9E38980B572799B99FCAd00453d4",
+    router: "0xf6DF18744011AEA77b746093EEf8bFa0589Fc765",
     wrappedNative: baseSepoliaWrappedNative,
     initCodePairHash:
-      "0x899bfae07aebcbd41dd8c0277217ba2321dba16b706d48202bd5fe6c8fe27285",
+      "0xdf41a871c462cd65637930b4a275bc246873953deef884583a32f695bf63924f",
     apass: "0xbA82D189540CaC9DC6FF46B6837CaC1BFdEC58B9",
     tokenPolicy: "0x36489bE45fa84f70a0c2BDB11D824Be608CB12Dd",
     complianceValidator: "0xaC7e5179C2C7f03f209136886c172eb34F161792",
