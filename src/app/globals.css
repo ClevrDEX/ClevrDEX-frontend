@@ -3168,8 +3168,7 @@ a {
   gap: 56px;
 }
 
-.landing-checklist,
-.landing-trust-grid {
+.landing-checklist {
   display: flex;
   flex-direction: column;
   gap: 24px;
@@ -3178,10 +3177,28 @@ a {
   list-style: none;
 }
 
-.landing-checklist li,
-.landing-trust-grid li {
+.landing-trust-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px 28px;
+  margin: 28px 0 0;
+  padding: 0;
+  list-style: none;
+  align-content: start;
+}
+
+.landing-checklist li {
   display: flex;
   align-items: center;
+  gap: 16px;
+  color: #0f1b2d;
+  font-size: 17px;
+  font-weight: 500;
+}
+
+.landing-trust-grid li {
+  display: flex;
+  align-items: flex-start;
   gap: 16px;
   color: #0f1b2d;
   font-size: 17px;
@@ -3730,6 +3747,10 @@ a {
   .landing-grid-3,
   .landing-grid-4,
   .landing-steps {
+    grid-template-columns: 1fr;
+  }
+
+  .landing-trust-grid {
     grid-template-columns: 1fr;
   }
 
