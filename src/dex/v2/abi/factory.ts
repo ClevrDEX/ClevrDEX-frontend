@@ -9,4 +9,11 @@ export const v2FactoryAbi = [
     ],
     outputs: [{ name: "pair", type: "address" }],
   },
+  {
+    type: "function",
+    name: "listingPolicy",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ name: "", type: "address" }],
+  },
 ] as const

@@ -80,16 +80,16 @@ export function useTradeCompliance({
       } catch {
         return {
           allowed: false,
-          message: "Unable to read A-Pass contract. Check A-Pass deployment.",
+          message: "Unable to read CVI contract. Check CVI deployment.",
         }
       }
 
       if (!hasAPass) {
         return {
           allowed: false,
-          message: "Trader must hold an A-Pass.",
+          message: "Trader must hold a CVI.",
           action: {
-            label: "Get A-Pass",
+            label: "Get CVI",
             href: getAPassUrl(deployment),
           },
         }
@@ -106,14 +106,14 @@ export function useTradeCompliance({
       } catch {
         return {
           allowed: false,
-          message: "Unable to verify A-Pass status. Check A-Pass deployment.",
+          message: "Unable to verify CVI status. Check CVI deployment.",
         }
       }
 
       if (!validAPass) {
         return {
           allowed: false,
-          message: "Trader A-Pass is not active or expired.",
+          message: "Trader CVI is not active or expired.",
         }
       }
 
@@ -130,7 +130,7 @@ export function useTradeCompliance({
         } catch {
           return {
             allowed: false,
-            message: `Unable to read ${check.symbol} token policy. Check A-Token policy deployment.`,
+            message: `Unable to read ${check.symbol} token policy. Check CVA policy deployment.`,
           }
         }
 
@@ -153,7 +153,7 @@ export function useTradeCompliance({
             allowed: false,
             message: getComplianceErrorMessage(
               error,
-              `Trader A-Pass does not meet ${check.symbol} policy requirements.`,
+              `Trader CVI does not meet ${check.symbol} policy requirements.`,
             ),
           }
         }
@@ -219,7 +219,7 @@ export function useTradeCompliance({
               return {
                 allowed: false,
                 message:
-                  "Trader A-Pass does not meet this pair's compliance rules.",
+                  "Trader CVI does not meet this pair's compliance rules.",
               }
             }
           } catch (error) {
@@ -227,7 +227,7 @@ export function useTradeCompliance({
               allowed: false,
               message: getComplianceErrorMessage(
                 error,
-                "Trader A-Pass does not meet this pair's compliance rules.",
+                "Trader CVI does not meet this pair's compliance rules.",
               ),
             }
           }
@@ -250,25 +250,25 @@ function getComplianceErrorMessage(error: unknown, fallback: string) {
         : ""
 
   if (message.includes("NoAPass")) {
-    return "Trader must hold an A-Pass."
+    return "Trader must hold a CVI."
   }
   if (message.includes("APassNotActive")) {
-    return "Trader A-Pass is not active."
+    return "Trader CVI is not active."
   }
   if (message.includes("APassExpired")) {
-    return "Trader A-Pass is expired."
+    return "Trader CVI is expired."
   }
   if (message.includes("TierTooLow")) {
-    return "Trader A-Pass tier is too low for this compliance rule."
+    return "Trader CVI tier is too low for this compliance rule."
   }
   if (message.includes("SubTierTooLow")) {
-    return "Trader A-Pass sub-tier is too low for this compliance rule."
+    return "Trader CVI sub-tier is too low for this compliance rule."
   }
   if (message.includes("GroupMismatch")) {
-    return "Trader A-Pass group does not match this compliance rule."
+    return "Trader CVI group does not match this compliance rule."
   }
   if (message.includes("SubGroupMismatch")) {
-    return "Trader A-Pass sub-group does not match this compliance rule."
+    return "Trader CVI sub-group does not match this compliance rule."
   }
   if (message.includes("PoolIsPaused")) {
     return "This trading pair is paused by compliance policy."
@@ -283,7 +283,7 @@ function getComplianceErrorMessage(error: unknown, fallback: string) {
     return "This trading pair is not registered for compliance."
   }
   if (message.includes("TokenNotRegistered")) {
-    return "This token is not registered in A-Token policy."
+    return "This token is not registered in CVA policy."
   }
 
   return fallback

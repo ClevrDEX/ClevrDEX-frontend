@@ -456,8 +456,8 @@ export default function Home() {
               className="landing-infra-chips"
               aria-label={t("landing.infrastructure.capabilities")}
             >
-              <span>A-Pass</span>
-              <span>A-Tokens</span>
+              <span>CVI</span>
+              <span>CVA</span>
               <span>{t("landing.infrastructure.policy")}</span>
               <span>{t("landing.infrastructure.traceability")}</span>
               <span>{t("landing.infrastructure.multichain")}</span>

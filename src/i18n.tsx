@@ -27,7 +27,7 @@ const messages = {
     "landing.hero.tag": "Built on Cleanverse",
     "landing.hero.title": "Onchain swaps, instantly trusted.",
     "landing.hero.subtitle":
-      "ClevrSwap brings A-Pass compliance into a focused swap experience: policy-aware execution, transparent routing, and self-custody, across configured deployments.",
+      "ClevrSwap brings CVI compliance into a focused swap experience: policy-aware execution, transparent routing, and self-custody, across configured deployments.",
     "landing.hero.ctaSwap": "Start swapping",
     "landing.hero.ctaLiquidity": "Add liquidity",
     "landing.hero.chipBase": "Base Sepolia ready",
@@ -57,13 +57,13 @@ const messages = {
       "ClevrSwap brings the compliance capabilities of Cleanverse into a simple swap surface. Trade across supported networks, interact with verified participants, and review transparent execution.",
     "landing.solution.item1": "Policy-aware swaps across supported networks",
     "landing.solution.item2": "Transparent routing and clear price impact",
-    "landing.solution.item3": "Verified participants through A-Pass",
-    "landing.solution.item4": "Supported compliant assets such as A-Tokens",
+    "landing.solution.item3": "Verified participants through CVI",
+    "landing.solution.item4": "Supported compliant assets such as CVAs",
     "landing.solution.item5": "Self-custody execution, wallet-native throughout",
     "landing.solution.item6": "Traceable onchain swap records",
     "landing.solution.cardTitle": "Eligibility gate",
     "landing.solution.cardBadge": "Pre-trade",
-    "landing.solution.participant": "Participant A-Pass",
+    "landing.solution.participant": "Participant CVI",
     "landing.solution.valid": "Valid",
     "landing.solution.assetSupport": "Asset support",
     "landing.solution.eligibilityRule": "Eligibility rule",
@@ -78,9 +78,9 @@ const messages = {
     "landing.feature.routing.title": "Transparent routing",
     "landing.feature.routing.description":
       "See the route, price impact, and slippage before you confirm, with no hidden hops.",
-    "landing.feature.apassEligibility.title": "A-Pass eligibility checks",
+    "landing.feature.apassEligibility.title": "CVI eligibility checks",
     "landing.feature.apassEligibility.description":
-      "Before confirmation, we'll verify that your connected wallet holds a valid A-Pass and is eligible to receive the selected A-Token.",
+      "Before confirmation, we'll verify that your connected wallet holds a valid CVI and is eligible to receive the selected CVA.",
     "landing.feature.custody.title": "Self-custody execution",
     "landing.feature.custody.description":
       "You keep wallet control while the interface keeps route, confirmation, and execution clear.",
@@ -89,7 +89,7 @@ const messages = {
       "Chain, router, factory, wrapped native, and token metadata stay configuration-driven.",
     "landing.feature.cleanverse.title": "Built on Cleanverse",
     "landing.feature.cleanverse.description":
-      "A-Pass identity and supported assets interlock to keep every swap accountable.",
+      "CVI identity and supported assets interlock to keep every swap accountable.",
     "landing.how.eyebrow": "How it works",
     "landing.how.title": "From wallet to settled swap in four steps.",
     "landing.how.step1.title": "Connect wallet",
@@ -97,10 +97,10 @@ const messages = {
       "Connect your wallet to get started.",
     "landing.how.step2.title": "Choose tokens & review route",
     "landing.how.step2.description":
-      "Select an A-Token pair and review the route, price impact, and estimated output.",
-    "landing.how.step3.title": "Verify A-Pass eligibility",
+      "Select a CVA pair and review the route, price impact, and estimated output.",
+    "landing.how.step3.title": "Verify CVI eligibility",
     "landing.how.step3.description":
-      "Before confirmation, we'll verify that your connected wallet holds a valid A-Pass and is eligible to receive the selected A-Token.",
+      "Before confirmation, we'll verify that your connected wallet holds a valid CVI and is eligible to receive the selected CVA.",
     "landing.how.step4.title": "Confirm, execute & track",
     "landing.how.step4.description":
       "Confirm the swap from your wallet, then track its onchain status, route, and traceability in one place.",
@@ -140,7 +140,7 @@ const messages = {
     "landing.mock.ready": "Ready",
     "landing.mock.pay": "You pay",
     "landing.mock.receive": "You receive",
-    "landing.mock.apass": "A-Pass",
+    "landing.mock.apass": "CVI",
     "landing.mock.verified": "Verified",
     "landing.mock.addLiquidity": "Add liquidity",
     "landing.mock.pool": "Pool",
@@ -168,16 +168,16 @@ const messages = {
     "landing.faq.title": "Questions, answered.",
     "landing.faq.q1": "What is ClevrSwap?",
     "landing.faq.a1":
-      "ClevrSwap is a compliance-aware DEX interface built on Cleanverse. It brings A-Pass identity and supported-asset controls into a focused swap experience with transparent routing and self-custody execution.",
-    "landing.faq.q2": "What is A-Pass?",
+      "ClevrSwap is a compliance-aware DEX interface built on Cleanverse. It brings CVI identity and supported-asset controls into a focused swap experience with transparent routing and self-custody execution.",
+    "landing.faq.q2": "What is CVI?",
     "landing.faq.a2":
-      "A-Pass is Cleanverse's participant eligibility credential. It binds verified identity attributes to a wallet so eligibility rules can be applied before a swap settles.",
+      "CVI is Cleanverse's participant eligibility credential. It binds verified identity attributes to a wallet so eligibility rules can be applied before a swap settles.",
     "landing.faq.q3": "Is ClevrSwap self-custody?",
     "landing.faq.a3":
       "Yes. You keep wallet control throughout. ClevrSwap keeps route, slippage, and confirmation states clear, but never takes custody of your assets.",
     "landing.faq.q4": "Which chains and tokens are supported?",
     "landing.faq.a4":
-      "Support is configuration-driven across deployments. The current testnet environment runs on Base Sepolia with ERC-20 routing and supported assets such as A-Tokens.",
+      "Support is configuration-driven across deployments. The current testnet environment runs on Base Sepolia with ERC-20 routing and supported assets such as CVAs.",
     "landing.faq.q5": "Who is ClevrSwap for?",
     "landing.faq.a5":
       "Traders, liquidity providers, desks, and institutions that need verified counterparties, supported assets, and review-friendly execution.",
@@ -201,9 +201,9 @@ const messages = {
     "common.closeProgress": "Close transaction progress",
     "common.retry": "Retry",
     "common.min": "min",
-    "common.configureRouter": "Configure the A-Pass router in",
+    "common.configureRouter": "Configure the CVI router in",
     "common.insufficientBalance": "Insufficient balance.",
-    "common.checkingCompliance": "Checking A-Pass compliance...",
+    "common.checkingCompliance": "Checking CVI compliance...",
     "common.transactionConfirmed": "Transaction confirmed.",
     "common.savedToHistory": "The confirmed transaction was saved to local history.",
     "common.transactionRejected": "Transaction rejected in wallet.",
@@ -215,7 +215,7 @@ const messages = {
     "common.transactionWindow": "Transaction window",
     "common.adjustSettings": "Adjust slippage tolerance and transaction deadline.",
 
-    "swap.kicker": "A-Pass router",
+    "swap.kicker": "CVI router",
     "swap.title": "Compliance Swap",
     "swap.settings": "Swap settings",
     "swap.from": "From",
@@ -230,7 +230,7 @@ const messages = {
     "swap.statusSaved": "Your swap was saved to local transaction history.",
     "swap.progressTitle": "Swap progress",
     "swap.progressDescription":
-      "Check A-Pass, approve if needed, then confirm the swap.",
+      "Check CVI, approve if needed, then confirm the swap.",
     "swap.approveSubmitted":
       "Approve submitted. Waiting for the approval to confirm on-chain.",
     "swap.submitted":
@@ -240,7 +240,7 @@ const messages = {
     "swap.approveDescription":
       "Grant the router permission to spend the input token.",
     "swap.stepLabel": "Confirm swap",
-    "swap.stepDescription": "Confirm the swap after A-Pass and approval are ready.",
+    "swap.stepDescription": "Confirm the swap after CVI and approval are ready.",
 
     "liquidity.kicker": "Pool operations",
     "liquidity.titleAdd": "Add Liquidity",
@@ -253,6 +253,13 @@ const messages = {
     "liquidity.tokenB": "Token B",
     "liquidity.firstProvision":
       "This is the first liquidity for the {pair} pair. You set the initial price - enter any ratio of the two amounts.",
+    "liquidity.cvaRequiredTitle": "This pair cannot be created",
+    "liquidity.cvaRequiredOne":
+      "Neither {tokenA} nor {tokenB} is registered as a CVA. A new pool needs at least one CVA, so this transaction would revert on-chain.",
+    "liquidity.cvaRequiredBoth":
+      "{symbols} is not registered as a CVA. This deployment requires both tokens of a new pool to be CVAs, so this transaction would revert on-chain.",
+    "liquidity.listingPolicyMissing":
+      "The factory has no listing policy configured, so new pools cannot be created right now.",
     "liquidity.poolRatio": "Pool ratio",
     "liquidity.minimumToken": "Minimum {symbol}",
     "liquidity.approveAndAdd": "Approve and Add Liquidity",
@@ -262,7 +269,7 @@ const messages = {
     "liquidity.addStatus": "Add ERC20 liquidity with slippage protection.",
     "liquidity.addProgressTitle": "Add liquidity progress",
     "liquidity.addProgressDescription":
-      "Check A-Pass, approve required tokens if needed, then confirm add liquidity.",
+      "Check CVI, approve required tokens if needed, then confirm add liquidity.",
     "liquidity.approvalSubmitted":
       "Approval submitted. Waiting for the token allowance to update.",
     "liquidity.addSubmitted":
@@ -273,7 +280,7 @@ const messages = {
       "Grant the router permission to spend the second token.",
     "liquidity.addStepLabel": "Confirm add liquidity",
     "liquidity.addStepDescription":
-      "Confirm the deposit after A-Pass and approvals are ready.",
+      "Confirm the deposit after CVI and approvals are ready.",
     "liquidity.backToPositions": "Back to positions",
     "liquidity.connectPositions":
       "Connect your wallet to view liquidity positions.",
@@ -289,7 +296,7 @@ const messages = {
     "liquidity.exceedsPooled": "Exceeds pooled balance.",
     "liquidity.removeProgressTitle": "Remove liquidity progress",
     "liquidity.removeProgressDescription":
-      "Check A-Pass, approve LP tokens if needed, then confirm remove liquidity.",
+      "Check CVI, approve LP tokens if needed, then confirm remove liquidity.",
     "liquidity.lpApprovalSubmitted":
       "Approval submitted. Waiting for the LP allowance to update.",
     "liquidity.removeSubmitted":
@@ -300,13 +307,23 @@ const messages = {
       "Grant the router permission to burn your LP tokens.",
     "liquidity.removeStepLabel": "Confirm remove liquidity",
     "liquidity.removeStepDescription":
-      "Confirm the withdrawal after A-Pass and approval are ready.",
+      "Confirm the withdrawal after CVI and approval are ready.",
 
     "token.selectAria": "Select a token",
-    "token.searchSubtitle": "Search tokens from the configured token list",
+    "token.searchSubtitle": "Search the list or paste any token address",
     "token.closeSelector": "Close token selector",
-    "token.searchPlaceholder": "Search name, symbol or address",
-    "token.empty": "No token found in the configured token list.",
+    "token.searchPlaceholder": "Search name, symbol or paste an address",
+    "token.empty":
+      "No token found. Paste a contract address to look it up on-chain.",
+    "token.importAction": "Import",
+    "token.importLoading": "Reading token details from the chain...",
+    "token.importInvalid":
+      "No ERC-20 token was found at this address on the connected network.",
+    "token.removeImported": "Remove imported token {symbol}",
+    "token.cvaRegistered": "Registered CVA - can be paired with any token.",
+    "token.cvaMissing":
+      "Not a CVA. It can only form a pool together with a CVA token.",
+    "token.cvaBadgeTitle": "Registered in the CVA token policy",
 
     "flow.status.pending": "Pending",
     "flow.status.checking": "Checking",
@@ -315,10 +332,10 @@ const messages = {
     "flow.status.success": "Done",
     "flow.status.skipped": "Skipped",
     "flow.status.error": "Failed",
-    "flow.checkAPass": "Check A-Pass",
+    "flow.checkAPass": "Check CVI",
     "flow.checkAPassDescription":
-      "Verify your A-Pass, tier, group, and token eligibility.",
-    "flow.apassChecked": "A-Pass eligibility verified.",
+      "Verify your CVI, tier, group, and token eligibility.",
+    "flow.apassChecked": "CVI eligibility verified.",
     "flow.finalConfirming":
       "The transaction has been submitted. You can close this window and continue using the app while it confirms on-chain.",
     "flow.keepWallet":
@@ -353,7 +370,7 @@ const messages = {
     "landing.hero.tag": "建構於 Cleanverse",
     "landing.hero.title": "鏈上兌換，即刻可信。",
     "landing.hero.subtitle":
-      "ClevrSwap 將 A-Pass 合規帶入專注的兌換體驗：在各部署環境中提供合規感知的執行、透明路由與自我託管。",
+      "ClevrSwap 將 CVI 合規帶入專注的兌換體驗：在各部署環境中提供合規感知的執行、透明路由與自我託管。",
     "landing.hero.ctaSwap": "開始兌換",
     "landing.hero.ctaLiquidity": "新增流動性",
     "landing.hero.chipBase": "支援 Base Sepolia",
@@ -383,13 +400,13 @@ const messages = {
       "ClevrSwap 將 Cleanverse 的合規能力帶入簡潔的兌換介面。在支援的網路上交易、與已驗證的參與者互動、審閱透明的執行。",
     "landing.solution.item1": "於支援網路上的政策感知兌換",
     "landing.solution.item2": "透明路由與清晰的價格影響",
-    "landing.solution.item3": "透過 A-Pass 驗證的參與者",
-    "landing.solution.item4": "支援如 A-Token 的合規資產",
+    "landing.solution.item3": "透過 CVI 驗證的參與者",
+    "landing.solution.item4": "支援如 CVA 的合規資產",
     "landing.solution.item5": "全程錢包原生的自我託管執行",
     "landing.solution.item6": "可追溯的鏈上兌換紀錄",
     "landing.solution.cardTitle": "資格審查",
     "landing.solution.cardBadge": "交易前",
-    "landing.solution.participant": "參與者 A-Pass",
+    "landing.solution.participant": "參與者 CVI",
     "landing.solution.valid": "有效",
     "landing.solution.assetSupport": "資產支援",
     "landing.solution.eligibilityRule": "資格規則",
@@ -404,9 +421,9 @@ const messages = {
     "landing.feature.routing.title": "透明路由",
     "landing.feature.routing.description":
       "在確認前查看路由、價格影響與滑點，沒有隱藏跳轉。",
-    "landing.feature.apassEligibility.title": "A-Pass 資格驗證",
+    "landing.feature.apassEligibility.title": "CVI 資格驗證",
     "landing.feature.apassEligibility.description":
-      "在確認前，我們會驗證你的連接錢包是否持有有效的 A-Pass，並具備領取所選 A-Token 的資格。",
+      "在確認前，我們會驗證你的連接錢包是否持有有效的 CVI，並具備領取所選 CVA 的資格。",
     "landing.feature.custody.title": "自我託管執行",
     "landing.feature.custody.description":
       "你保有錢包控制權，介面則讓路由、確認與執行流程保持清晰。",
@@ -415,7 +432,7 @@ const messages = {
       "鏈、路由器、工廠、封裝原生代幣與代幣中繼資料皆由配置驅動。",
     "landing.feature.cleanverse.title": "建構於 Cleanverse",
     "landing.feature.cleanverse.description":
-      "A-Pass 身份與支援資產相互扣合，讓每筆兌換可問責。",
+      "CVI 身份與支援資產相互扣合，讓每筆兌換可問責。",
     "landing.how.eyebrow": "運作方式",
     "landing.how.title": "從錢包到完成兌換，四個步驟。",
     "landing.how.step1.title": "連接錢包",
@@ -423,10 +440,10 @@ const messages = {
       "連接你的錢包以開始使用。",
     "landing.how.step2.title": "選擇代幣並檢視路由",
     "landing.how.step2.description":
-      "選擇 A-Token 交易對，並檢視路由、價格影響與預估產出。",
-    "landing.how.step3.title": "驗證 A-Pass 資格",
+      "選擇 CVA 交易對，並檢視路由、價格影響與預估產出。",
+    "landing.how.step3.title": "驗證 CVI 資格",
     "landing.how.step3.description":
-      "在確認前，我們會驗證你的連接錢包是否持有有效的 A-Pass，並具備領取所選 A-Token 的資格。",
+      "在確認前，我們會驗證你的連接錢包是否持有有效的 CVI，並具備領取所選 CVA 的資格。",
     "landing.how.step4.title": "確認、執行並追蹤",
     "landing.how.step4.description":
       "從錢包確認兌換，然後在同一處追蹤鏈上狀態、路由與可追溯資訊。",
@@ -466,7 +483,7 @@ const messages = {
     "landing.mock.ready": "就緒",
     "landing.mock.pay": "支付",
     "landing.mock.receive": "取得",
-    "landing.mock.apass": "A-Pass",
+    "landing.mock.apass": "CVI",
     "landing.mock.verified": "已驗證",
     "landing.mock.addLiquidity": "新增流動性",
     "landing.mock.pool": "資金池",
@@ -494,16 +511,16 @@ const messages = {
     "landing.faq.title": "問題，一一解答。",
     "landing.faq.q1": "什麼是 ClevrSwap？",
     "landing.faq.a1":
-      "ClevrSwap 是建構於 Cleanverse 的合規感知 DEX 介面。它將 A-Pass 身份與支援資產控制帶入專注的兌換體驗，並提供透明路由與自我託管執行。",
-    "landing.faq.q2": "什麼是 A-Pass？",
+      "ClevrSwap 是建構於 Cleanverse 的合規感知 DEX 介面。它將 CVI 身份與支援資產控制帶入專注的兌換體驗，並提供透明路由與自我託管執行。",
+    "landing.faq.q2": "什麼是 CVI？",
     "landing.faq.a2":
-      "A-Pass 是 Cleanverse 的參與者資格憑證。它將已驗證的身份屬性綁定至錢包，使資格規則能在兌換結算前套用。",
+      "CVI 是 Cleanverse 的參與者資格憑證。它將已驗證的身份屬性綁定至錢包，使資格規則能在兌換結算前套用。",
     "landing.faq.q3": "ClevrSwap 是自我託管嗎？",
     "landing.faq.a3":
       "是。你全程保有錢包控制權。ClevrSwap 讓路由、滑點與確認狀態保持清晰，但絕不託管你的資產。",
     "landing.faq.q4": "支援哪些鏈與代幣？",
     "landing.faq.a4":
-      "支援範圍依各部署的配置而定。目前的測試網環境運行於 Base Sepolia，採 ERC-20 路由並支援如 A-Token 的資產。",
+      "支援範圍依各部署的配置而定。目前的測試網環境運行於 Base Sepolia，採 ERC-20 路由並支援如 CVA 的資產。",
     "landing.faq.q5": "ClevrSwap 適合誰？",
     "landing.faq.a5":
       "需要已驗證對手方、支援資產與利於審閱之執行的交易者、流動性提供者、交易部門與機構。",
@@ -527,9 +544,9 @@ const messages = {
     "common.closeProgress": "關閉交易進度",
     "common.retry": "重試",
     "common.min": "分鐘",
-    "common.configureRouter": "請在此配置 A-Pass 路由器：",
+    "common.configureRouter": "請在此配置 CVI 路由器：",
     "common.insufficientBalance": "餘額不足。",
-    "common.checkingCompliance": "正在檢查 A-Pass 合規...",
+    "common.checkingCompliance": "正在檢查 CVI 合規...",
     "common.transactionConfirmed": "交易已確認。",
     "common.savedToHistory": "已確認的交易已儲存在本機歷史紀錄。",
     "common.transactionRejected": "錢包已拒絕交易。",
@@ -540,7 +557,7 @@ const messages = {
     "common.transactionWindow": "交易有效時間",
     "common.adjustSettings": "調整滑點容忍度與交易截止時間。",
 
-    "swap.kicker": "A-Pass 路由",
+    "swap.kicker": "CVI 路由",
     "swap.title": "合規兌換",
     "swap.settings": "兌換設定",
     "swap.from": "支付",
@@ -554,14 +571,14 @@ const messages = {
     "swap.statusNoRoute": "找不到此金額的路由。",
     "swap.statusSaved": "你的兌換已儲存到本機交易歷史。",
     "swap.progressTitle": "兌換進度",
-    "swap.progressDescription": "先檢查 A-Pass，如有需要再授權，然後確認兌換。",
+    "swap.progressDescription": "先檢查 CVI，如有需要再授權，然後確認兌換。",
     "swap.approveSubmitted": "授權已送出，正在等待鏈上確認。",
     "swap.submitted": "兌換已送出。確認期間你可以關閉此視窗。",
     "swap.reverted": "兌換交易已回滾。",
     "swap.approveLabel": "授權 {symbol}",
     "swap.approveDescription": "允許路由器使用輸入代幣。",
     "swap.stepLabel": "確認兌換",
-    "swap.stepDescription": "A-Pass 與授權就緒後確認兌換。",
+    "swap.stepDescription": "CVI 與授權就緒後確認兌換。",
 
     "liquidity.kicker": "資金池操作",
     "liquidity.titleAdd": "新增流動性",
@@ -574,6 +591,13 @@ const messages = {
     "liquidity.tokenB": "代幣 B",
     "liquidity.firstProvision":
       "這是 {pair} 交易對的首筆流動性。你將設定初始價格，請輸入任意比例的兩項金額。",
+    "liquidity.cvaRequiredTitle": "無法建立此交易對",
+    "liquidity.cvaRequiredOne":
+      "{tokenA} 與 {tokenB} 都不是已註冊的 CVA。新資金池至少需要一個 CVA，因此這筆交易會在鏈上失敗。",
+    "liquidity.cvaRequiredBoth":
+      "{symbols} 不是已註冊的 CVA。此部署要求新資金池的兩個代幣都必須是 CVA，因此這筆交易會在鏈上失敗。",
+    "liquidity.listingPolicyMissing":
+      "工廠合約尚未設定上架政策，目前無法建立新的資金池。",
     "liquidity.poolRatio": "資金池比例",
     "liquidity.minimumToken": "最低 {symbol}",
     "liquidity.approveAndAdd": "授權並新增流動性",
@@ -582,14 +606,14 @@ const messages = {
     "liquidity.added": "流動性已新增。",
     "liquidity.addStatus": "以滑點保護新增 ERC20 流動性。",
     "liquidity.addProgressTitle": "新增流動性進度",
-    "liquidity.addProgressDescription": "先檢查 A-Pass，如有需要再授權代幣，然後確認新增流動性。",
+    "liquidity.addProgressDescription": "先檢查 CVI，如有需要再授權代幣，然後確認新增流動性。",
     "liquidity.approvalSubmitted": "授權已送出，正在等待代幣額度更新。",
     "liquidity.addSubmitted": "流動性交易已送出。確認期間你可以關閉此視窗。",
     "liquidity.addReverted": "新增流動性交易已回滾。",
     "liquidity.approveFirst": "允許路由器使用第一個代幣。",
     "liquidity.approveSecond": "允許路由器使用第二個代幣。",
     "liquidity.addStepLabel": "確認新增流動性",
-    "liquidity.addStepDescription": "A-Pass 與授權就緒後確認存入兩個代幣。",
+    "liquidity.addStepDescription": "CVI 與授權就緒後確認存入兩個代幣。",
     "liquidity.backToPositions": "返回持倉",
     "liquidity.connectPositions": "連接錢包以查看流動性持倉。",
     "liquidity.loadingPositions": "正在載入你的持倉...",
@@ -603,20 +627,27 @@ const messages = {
     "liquidity.removed": "流動性已移除。",
     "liquidity.exceedsPooled": "超出池中餘額。",
     "liquidity.removeProgressTitle": "移除流動性進度",
-    "liquidity.removeProgressDescription": "先檢查 A-Pass，如有需要再授權 LP 代幣，然後確認移除流動性。",
+    "liquidity.removeProgressDescription": "先檢查 CVI，如有需要再授權 LP 代幣，然後確認移除流動性。",
     "liquidity.lpApprovalSubmitted": "授權已送出，正在等待 LP 額度更新。",
     "liquidity.removeSubmitted": "移除交易已送出。確認期間你可以關閉此視窗。",
     "liquidity.removeReverted": "移除流動性交易已回滾。",
     "liquidity.approveLp": "授權 LP 代幣",
     "liquidity.approveLpDescription": "允許路由器銷毀你的 LP 代幣。",
     "liquidity.removeStepLabel": "確認移除流動性",
-    "liquidity.removeStepDescription": "A-Pass 與授權就緒後確認取回底層資產。",
+    "liquidity.removeStepDescription": "CVI 與授權就緒後確認取回底層資產。",
 
     "token.selectAria": "選擇代幣",
-    "token.searchSubtitle": "從已配置的代幣清單搜尋",
+    "token.searchSubtitle": "搜尋清單，或貼上任意代幣地址",
     "token.closeSelector": "關閉代幣選擇器",
-    "token.searchPlaceholder": "搜尋名稱、符號或地址",
-    "token.empty": "在已配置的代幣清單中找不到代幣。",
+    "token.searchPlaceholder": "搜尋名稱、符號，或貼上地址",
+    "token.empty": "找不到代幣。可貼上合約地址以在鏈上查詢。",
+    "token.importAction": "匯入",
+    "token.importLoading": "正在從鏈上讀取代幣資料...",
+    "token.importInvalid": "在目前網路的此地址上找不到 ERC-20 代幣。",
+    "token.removeImported": "移除已匯入的代幣 {symbol}",
+    "token.cvaRegistered": "已註冊的 CVA，可與任意代幣組成交易對。",
+    "token.cvaMissing": "不是 CVA，只能與 CVA 代幣組成資金池。",
+    "token.cvaBadgeTitle": "已在 CVA 代幣政策中註冊",
 
     "flow.status.pending": "待處理",
     "flow.status.checking": "檢查中",
@@ -625,9 +656,9 @@ const messages = {
     "flow.status.success": "完成",
     "flow.status.skipped": "已略過",
     "flow.status.error": "失敗",
-    "flow.checkAPass": "檢查 A-Pass",
-    "flow.checkAPassDescription": "驗證你的 A-Pass、等級、群組與代幣資格。",
-    "flow.apassChecked": "A-Pass 資格已通過。",
+    "flow.checkAPass": "檢查 CVI",
+    "flow.checkAPassDescription": "驗證你的 CVI、等級、群組與代幣資格。",
+    "flow.apassChecked": "CVI 資格已通過。",
     "flow.finalConfirming": "交易已送出。鏈上確認期間，你可以關閉此視窗並繼續使用應用。",
     "flow.keepWallet": "請保持錢包可用以完成每次簽署。關閉此視窗不會取消已送出的交易。",
 

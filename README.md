@@ -1,6 +1,6 @@
 # ClevrSwap Frontend
 
-ClevrSwap is an A-Pass Compliance frontend for configurable V2-style contract deployments, built on Cleanverse.
+ClevrSwap is a CVI Compliance frontend for configurable V2-style contract deployments, built on Cleanverse.
 
 ## Current Scope
 

@@ -1,7 +1,9 @@
 import { useQuery } from "@tanstack/react-query"
+import { useMemo } from "react"
 import { getAddress, isAddress } from "viem"
 
 import type { DexDeployment, TokenInfo } from "@/chains/deployments"
+import { useCustomTokens } from "@/features/tokens/customTokens"
 
 type TokenListResponse =
   | TokenInfo[]
@@ -15,8 +17,9 @@ export function useTokenList(
 ) {
   const configuredTokens = deployment?.tokenList ?? []
   const tokenListUrl = deployment?.tokenListUrl.trim() ?? ""
+  const customTokens = useCustomTokens(chainId)
 
-  return useQuery({
+  const query = useQuery({
     queryKey: ["token-list", chainId, tokenListUrl, configuredTokens],
     enabled: Boolean(deployment),
     initialData: configuredTokens,
@@ -33,6 +36,14 @@ export function useTokenList(
       return mergeTokenLists(configuredTokens, remoteTokens)
     },
   })
+
+  const listedTokens = query.data
+  const data = useMemo(
+    () => mergeTokenLists(listedTokens ?? [], customTokens),
+    [customTokens, listedTokens],
+  )
+
+  return { data, isLoading: query.isLoading, isError: query.isError }
 }
 
 async function fetchTokenList(url: string, chainId: number) {

@@ -13,6 +13,7 @@ import {
 } from "wagmi"
 
 import { getDexDeployment, type TokenInfo } from "@/chains/deployments"
+import { usePairListingCheck } from "@/compliance/usePairListingCheck"
 import { useTradeCompliance } from "@/compliance/useTradeCompliance"
 import { erc20Abi } from "@/dex/v2/abi/erc20"
 import { v2FactoryAbi } from "@/dex/v2/abi/factory"
@@ -146,6 +147,38 @@ export function LiquidityCard() {
   const pairAddress = pairQuery.data
   const pairExists = Boolean(pairAddress) && pairAddress !== zeroAddress
 
+  // The factory listing gate only runs while a pair is created, so an existing
+  // pool can always receive liquidity regardless of CVA registration.
+  const listingCheck = usePairListingCheck({
+    deployment,
+    tokenA,
+    tokenB,
+    enabled: pairQuery.isSuccess && !pairExists && !sameToken,
+  })
+  const listingBlocked = listingCheck.status === "blocked"
+  const listingWarning = useMemo(() => {
+    if (!listingBlocked || !tokenA || !tokenB) {
+      return ""
+    }
+
+    if (listingCheck.policyMissing) {
+      return t("liquidity.listingPolicyMissing")
+    }
+
+    if (listingCheck.requireBothCva) {
+      return t("liquidity.cvaRequiredBoth", {
+        symbols: listingCheck.missingCva
+          .map((token) => token.symbol)
+          .join(" / "),
+      })
+    }
+
+    return t("liquidity.cvaRequiredOne", {
+      tokenA: tokenA.symbol,
+      tokenB: tokenB.symbol,
+    })
+  }, [listingBlocked, listingCheck, t, tokenA, tokenB])
+
   const reservesQuery = useReadContract({
     address: pairExists ? pairAddress : undefined,
     abi: v2PairAbi,
@@ -230,6 +263,7 @@ export function LiquidityCard() {
     parsedAmountA <= 0n ||
     parsedAmountB <= 0n ||
     insufficientBalance ||
+    listingBlocked ||
     isPending ||
     flowRunning
 
@@ -500,7 +534,12 @@ export function LiquidityCard() {
         }
       />
 
-      {isFirstProvision && tokenA && tokenB ? (
+      {listingWarning ? (
+        <p className="status warning">
+          <strong>{t("liquidity.cvaRequiredTitle")}</strong>
+          <span>{listingWarning}</span>
+        </p>
+      ) : isFirstProvision && tokenA && tokenB ? (
         <p className="status">
           {t("liquidity.firstProvision", {
             pair: `${tokenA.symbol}/${tokenB.symbol}`,
