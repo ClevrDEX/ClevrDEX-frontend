@@ -325,6 +325,12 @@ a {
   }
 }
 
+@keyframes spinner-rotate {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .brand {
   display: flex;
   align-items: center;
@@ -1234,6 +1240,7 @@ a {
   padding: 11px;
 }
 
+.transaction-flow-step.checking,
 .transaction-flow-step.active,
 .transaction-flow-step.confirming {
   border-color: rgba(119, 242, 178, 0.28);
@@ -1280,6 +1287,44 @@ a {
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.08em;
+}
+
+.transaction-flow-step-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.transaction-flow-spinner {
+  width: 12px;
+  height: 12px;
+  border: 2px solid rgba(119, 242, 178, 0.22);
+  border-top-color: var(--primary);
+  border-radius: 999px;
+  animation: spinner-rotate 0.8s linear infinite;
+}
+
+.transaction-flow-error {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.transaction-flow-retry {
+  border: 1px solid rgba(255, 91, 91, 0.5);
+  border-radius: 999px;
+  background: rgba(255, 91, 91, 0.12);
+  color: var(--danger);
+  padding: 5px 10px;
+  font-size: var(--text-xs);
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.transaction-flow-retry:hover {
+  border-color: rgba(255, 91, 91, 0.48);
+  background: rgba(255, 91, 91, 0.12);
 }
 
 .transaction-flow-step p {
@@ -3125,42 +3170,32 @@ a {
 
 .landing-checklist,
 .landing-trust-grid {
-  display: grid;
-  gap: 12px;
-  margin-top: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  margin: 28px 0 0;
+  padding: 0;
+  list-style: none;
 }
 
-.landing-checklist span,
-.landing-trust-grid span {
+.landing-checklist li,
+.landing-trust-grid li {
   display: flex;
-  align-items: flex-start;
-  gap: 13px;
-  color: var(--landing-ink);
-  font-size: 15px;
+  align-items: center;
+  gap: 16px;
+  color: #0f1b2d;
+  font-size: 17px;
   font-weight: 500;
 }
 
-.landing-checklist i,
-.landing-trust-grid i {
-  position: relative;
-  display: grid;
-  width: 24px;
-  height: 24px;
-  flex: 0 0 24px;
-  place-items: center;
-  margin-top: 1px;
-  border-radius: 8px;
-  background: var(--landing-green);
-}
-
-.landing-checklist i::before,
-.landing-trust-grid i::before {
-  width: 8px;
-  height: 4px;
-  border-bottom: 2px solid #ffffff;
-  border-left: 2px solid #ffffff;
+.landing-checklist li::before,
+.landing-trust-grid li::before {
+  width: 30px;
+  height: 30px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: #e7f6ed url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='15' height='15' fill='none'%3E%3Cpath d='M2.8 7.8 L6 11 L12 4' stroke='%231FA85B' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/15px no-repeat;
   content: "";
-  transform: rotate(-45deg) translate(1px, -1px);
 }
 
 .landing-steps {
@@ -4351,6 +4386,7 @@ a {
 
 .token-option:hover,
 .token-option[aria-selected="true"],
+.transaction-flow-step.checking,
 .transaction-flow-step.active,
 .transaction-flow-step.confirming {
   border-color: #d3daff;
@@ -4376,6 +4412,7 @@ a {
   box-shadow: 0 10px 24px -20px rgba(59, 91, 255, 0.5);
 }
 
+.transaction-flow-step.checking .transaction-flow-step-index,
 .transaction-flow-step.active .transaction-flow-step-index,
 .transaction-flow-step.confirming .transaction-flow-step-index {
   background: #3b5bff;
@@ -4516,6 +4553,18 @@ a {
   border-color: rgba(255, 115, 115, 0.32);
   background: rgba(255, 115, 115, 0.08);
   color: var(--danger);
+}
+
+.token-modal .transaction-flow-retry {
+  border-color: rgba(255, 115, 115, 0.5);
+  background: #ffffff;
+  color: #c42b2b;
+}
+
+.token-modal .transaction-flow-retry:hover {
+  border-color: rgba(196, 43, 43, 0.66);
+  background: #fff1f1;
+  color: #9f1f1f;
 }
 
 @media (max-width: 680px) {

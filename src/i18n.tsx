@@ -78,12 +78,12 @@ const messages = {
     "landing.feature.routing.title": "Transparent routing",
     "landing.feature.routing.description":
       "See the route, price impact, and slippage before you confirm, with no hidden hops.",
-    "landing.feature.slippage.title": "Slippage controls",
-    "landing.feature.slippage.description":
-      "Set tolerances and confirmation states so every swap executes on your terms.",
+    "landing.feature.apassEligibility.title": "A-Pass eligibility checks",
+    "landing.feature.apassEligibility.description":
+      "Before confirmation, we'll verify that your connected wallet holds a valid A-Pass and is eligible to receive the selected A-Token.",
     "landing.feature.custody.title": "Self-custody execution",
     "landing.feature.custody.description":
-      "You keep wallet control while the interface keeps route, slippage, and confirmation clear.",
+      "You keep wallet control while the interface keeps route, confirmation, and execution clear.",
     "landing.feature.deployments.title": "Configurable deployments",
     "landing.feature.deployments.description":
       "Chain, router, factory, wrapped native, and token metadata stay configuration-driven.",
@@ -92,18 +92,18 @@ const messages = {
       "A-Pass identity and supported assets interlock to keep every swap accountable.",
     "landing.how.eyebrow": "How it works",
     "landing.how.title": "From wallet to settled swap in four steps.",
-    "landing.how.step1.title": "Connect wallet & A-Pass",
+    "landing.how.step1.title": "Connect wallet",
     "landing.how.step1.description":
-      "Connect your wallet and A-Pass to establish a verified trading profile.",
+      "Connect your wallet to get started.",
     "landing.how.step2.title": "Choose tokens & review route",
     "landing.how.step2.description":
-      "Pick the pair and review the route, price impact, and estimated output.",
-    "landing.how.step3.title": "Set slippage & confirm",
+      "Select an A-Token pair and review the route, price impact, and estimated output.",
+    "landing.how.step3.title": "Verify A-Pass eligibility",
     "landing.how.step3.description":
-      "Set your slippage tolerance and confirm the swap from your wallet.",
-    "landing.how.step4.title": "Execute & track onchain",
+      "Before confirmation, we'll verify that your connected wallet holds a valid A-Pass and is eligible to receive the selected A-Token.",
+    "landing.how.step4.title": "Confirm, execute & track",
     "landing.how.step4.description":
-      "Execute, then review status, route, and traceability in one place.",
+      "Confirm the swap from your wallet, then track its onchain status, route, and traceability in one place.",
     "landing.useCases.eyebrow": "Use cases",
     "landing.useCases.title": "Built for verified onchain markets.",
     "landing.useCase.swaps.title": "Compliant token swaps",
@@ -199,6 +199,7 @@ const messages = {
     "common.settings": "Settings",
     "common.closeSettings": "Close settings",
     "common.closeProgress": "Close transaction progress",
+    "common.retry": "Retry",
     "common.min": "min",
     "common.configureRouter": "Configure the A-Pass router in",
     "common.insufficientBalance": "Insufficient balance.",
@@ -228,7 +229,8 @@ const messages = {
     "swap.statusNoRoute": "No route found for this amount.",
     "swap.statusSaved": "Your swap was saved to local transaction history.",
     "swap.progressTitle": "Swap progress",
-    "swap.progressDescription": "Approve first if needed, then execute the swap.",
+    "swap.progressDescription":
+      "Check A-Pass, approve if needed, then confirm the swap.",
     "swap.approveSubmitted":
       "Approve submitted. Waiting for the approval to confirm on-chain.",
     "swap.submitted":
@@ -237,8 +239,8 @@ const messages = {
     "swap.approveLabel": "Approve {symbol}",
     "swap.approveDescription":
       "Grant the router permission to spend the input token.",
-    "swap.stepLabel": "Swap",
-    "swap.stepDescription": "Execute the swap after approval is ready.",
+    "swap.stepLabel": "Confirm swap",
+    "swap.stepDescription": "Confirm the swap after A-Pass and approval are ready.",
 
     "liquidity.kicker": "Pool operations",
     "liquidity.titleAdd": "Add Liquidity",
@@ -260,7 +262,7 @@ const messages = {
     "liquidity.addStatus": "Add ERC20 liquidity with slippage protection.",
     "liquidity.addProgressTitle": "Add liquidity progress",
     "liquidity.addProgressDescription":
-      "Approve required tokens first, then add liquidity.",
+      "Check A-Pass, approve required tokens if needed, then confirm add liquidity.",
     "liquidity.approvalSubmitted":
       "Approval submitted. Waiting for the token allowance to update.",
     "liquidity.addSubmitted":
@@ -269,9 +271,9 @@ const messages = {
     "liquidity.approveFirst": "Grant the router permission to spend the first token.",
     "liquidity.approveSecond":
       "Grant the router permission to spend the second token.",
-    "liquidity.addStepLabel": "Add liquidity",
+    "liquidity.addStepLabel": "Confirm add liquidity",
     "liquidity.addStepDescription":
-      "Deposit both tokens after approvals are ready.",
+      "Confirm the deposit after A-Pass and approvals are ready.",
     "liquidity.backToPositions": "Back to positions",
     "liquidity.connectPositions":
       "Connect your wallet to view liquidity positions.",
@@ -287,7 +289,7 @@ const messages = {
     "liquidity.exceedsPooled": "Exceeds pooled balance.",
     "liquidity.removeProgressTitle": "Remove liquidity progress",
     "liquidity.removeProgressDescription":
-      "Approve LP tokens first if needed, then remove liquidity.",
+      "Check A-Pass, approve LP tokens if needed, then confirm remove liquidity.",
     "liquidity.lpApprovalSubmitted":
       "Approval submitted. Waiting for the LP allowance to update.",
     "liquidity.removeSubmitted":
@@ -296,9 +298,9 @@ const messages = {
     "liquidity.approveLp": "Approve LP token",
     "liquidity.approveLpDescription":
       "Grant the router permission to burn your LP tokens.",
-    "liquidity.removeStepLabel": "Remove liquidity",
+    "liquidity.removeStepLabel": "Confirm remove liquidity",
     "liquidity.removeStepDescription":
-      "Burn LP tokens and withdraw the underlying assets.",
+      "Confirm the withdrawal after A-Pass and approval are ready.",
 
     "token.selectAria": "Select a token",
     "token.searchSubtitle": "Search tokens from the configured token list",
@@ -307,11 +309,16 @@ const messages = {
     "token.empty": "No token found in the configured token list.",
 
     "flow.status.pending": "Pending",
+    "flow.status.checking": "Checking",
     "flow.status.active": "Waiting for wallet",
     "flow.status.confirming": "Confirming",
     "flow.status.success": "Done",
     "flow.status.skipped": "Skipped",
     "flow.status.error": "Failed",
+    "flow.checkAPass": "Check A-Pass",
+    "flow.checkAPassDescription":
+      "Verify your A-Pass, tier, group, and token eligibility.",
+    "flow.apassChecked": "A-Pass eligibility verified.",
     "flow.finalConfirming":
       "The transaction has been submitted. You can close this window and continue using the app while it confirms on-chain.",
     "flow.keepWallet":
@@ -397,12 +404,12 @@ const messages = {
     "landing.feature.routing.title": "透明路由",
     "landing.feature.routing.description":
       "在確認前查看路由、價格影響與滑點，沒有隱藏跳轉。",
-    "landing.feature.slippage.title": "滑點控制",
-    "landing.feature.slippage.description":
-      "設定容忍度與確認狀態，讓每筆兌換按你的條件執行。",
+    "landing.feature.apassEligibility.title": "A-Pass 資格驗證",
+    "landing.feature.apassEligibility.description":
+      "在確認前，我們會驗證你的連接錢包是否持有有效的 A-Pass，並具備領取所選 A-Token 的資格。",
     "landing.feature.custody.title": "自我託管執行",
     "landing.feature.custody.description":
-      "你保有錢包控制權，介面則讓路由、滑點與確認狀態保持清晰。",
+      "你保有錢包控制權，介面則讓路由、確認與執行流程保持清晰。",
     "landing.feature.deployments.title": "可配置部署",
     "landing.feature.deployments.description":
       "鏈、路由器、工廠、封裝原生代幣與代幣中繼資料皆由配置驅動。",
@@ -411,18 +418,18 @@ const messages = {
       "A-Pass 身份與支援資產相互扣合，讓每筆兌換可問責。",
     "landing.how.eyebrow": "運作方式",
     "landing.how.title": "從錢包到完成兌換，四個步驟。",
-    "landing.how.step1.title": "連接錢包與 A-Pass",
+    "landing.how.step1.title": "連接錢包",
     "landing.how.step1.description":
-      "連接你的錢包與 A-Pass，建立已驗證的交易身份。",
+      "連接你的錢包以開始使用。",
     "landing.how.step2.title": "選擇代幣並檢視路由",
     "landing.how.step2.description":
-      "選擇交易對，檢視路由、價格影響與預估產出。",
-    "landing.how.step3.title": "設定滑點並確認",
+      "選擇 A-Token 交易對，並檢視路由、價格影響與預估產出。",
+    "landing.how.step3.title": "驗證 A-Pass 資格",
     "landing.how.step3.description":
-      "設定滑點容忍度，並從錢包確認兌換。",
-    "landing.how.step4.title": "執行並鏈上追蹤",
+      "在確認前，我們會驗證你的連接錢包是否持有有效的 A-Pass，並具備領取所選 A-Token 的資格。",
+    "landing.how.step4.title": "確認、執行並追蹤",
     "landing.how.step4.description":
-      "執行後，在同一處檢視狀態、路由與可追溯資訊。",
+      "從錢包確認兌換，然後在同一處追蹤鏈上狀態、路由與可追溯資訊。",
     "landing.useCases.eyebrow": "應用場景",
     "landing.useCases.title": "為已驗證的鏈上市場而打造。",
     "landing.useCase.swaps.title": "合規代幣兌換",
@@ -518,6 +525,7 @@ const messages = {
     "common.settings": "設定",
     "common.closeSettings": "關閉設定",
     "common.closeProgress": "關閉交易進度",
+    "common.retry": "重試",
     "common.min": "分鐘",
     "common.configureRouter": "請在此配置 A-Pass 路由器：",
     "common.insufficientBalance": "餘額不足。",
@@ -546,14 +554,14 @@ const messages = {
     "swap.statusNoRoute": "找不到此金額的路由。",
     "swap.statusSaved": "你的兌換已儲存到本機交易歷史。",
     "swap.progressTitle": "兌換進度",
-    "swap.progressDescription": "如有需要先授權，然後執行兌換。",
+    "swap.progressDescription": "先檢查 A-Pass，如有需要再授權，然後確認兌換。",
     "swap.approveSubmitted": "授權已送出，正在等待鏈上確認。",
     "swap.submitted": "兌換已送出。確認期間你可以關閉此視窗。",
     "swap.reverted": "兌換交易已回滾。",
     "swap.approveLabel": "授權 {symbol}",
     "swap.approveDescription": "允許路由器使用輸入代幣。",
-    "swap.stepLabel": "兌換",
-    "swap.stepDescription": "授權就緒後執行兌換。",
+    "swap.stepLabel": "確認兌換",
+    "swap.stepDescription": "A-Pass 與授權就緒後確認兌換。",
 
     "liquidity.kicker": "資金池操作",
     "liquidity.titleAdd": "新增流動性",
@@ -574,14 +582,14 @@ const messages = {
     "liquidity.added": "流動性已新增。",
     "liquidity.addStatus": "以滑點保護新增 ERC20 流動性。",
     "liquidity.addProgressTitle": "新增流動性進度",
-    "liquidity.addProgressDescription": "先授權所需代幣，然後新增流動性。",
+    "liquidity.addProgressDescription": "先檢查 A-Pass，如有需要再授權代幣，然後確認新增流動性。",
     "liquidity.approvalSubmitted": "授權已送出，正在等待代幣額度更新。",
     "liquidity.addSubmitted": "流動性交易已送出。確認期間你可以關閉此視窗。",
     "liquidity.addReverted": "新增流動性交易已回滾。",
     "liquidity.approveFirst": "允許路由器使用第一個代幣。",
     "liquidity.approveSecond": "允許路由器使用第二個代幣。",
-    "liquidity.addStepLabel": "新增流動性",
-    "liquidity.addStepDescription": "授權就緒後存入兩個代幣。",
+    "liquidity.addStepLabel": "確認新增流動性",
+    "liquidity.addStepDescription": "A-Pass 與授權就緒後確認存入兩個代幣。",
     "liquidity.backToPositions": "返回持倉",
     "liquidity.connectPositions": "連接錢包以查看流動性持倉。",
     "liquidity.loadingPositions": "正在載入你的持倉...",
@@ -595,14 +603,14 @@ const messages = {
     "liquidity.removed": "流動性已移除。",
     "liquidity.exceedsPooled": "超出池中餘額。",
     "liquidity.removeProgressTitle": "移除流動性進度",
-    "liquidity.removeProgressDescription": "如有需要先授權 LP 代幣，然後移除流動性。",
+    "liquidity.removeProgressDescription": "先檢查 A-Pass，如有需要再授權 LP 代幣，然後確認移除流動性。",
     "liquidity.lpApprovalSubmitted": "授權已送出，正在等待 LP 額度更新。",
     "liquidity.removeSubmitted": "移除交易已送出。確認期間你可以關閉此視窗。",
     "liquidity.removeReverted": "移除流動性交易已回滾。",
     "liquidity.approveLp": "授權 LP 代幣",
     "liquidity.approveLpDescription": "允許路由器銷毀你的 LP 代幣。",
-    "liquidity.removeStepLabel": "移除流動性",
-    "liquidity.removeStepDescription": "銷毀 LP 代幣並取回底層資產。",
+    "liquidity.removeStepLabel": "確認移除流動性",
+    "liquidity.removeStepDescription": "A-Pass 與授權就緒後確認取回底層資產。",
 
     "token.selectAria": "選擇代幣",
     "token.searchSubtitle": "從已配置的代幣清單搜尋",
@@ -611,11 +619,15 @@ const messages = {
     "token.empty": "在已配置的代幣清單中找不到代幣。",
 
     "flow.status.pending": "待處理",
+    "flow.status.checking": "檢查中",
     "flow.status.active": "等待錢包",
     "flow.status.confirming": "確認中",
     "flow.status.success": "完成",
     "flow.status.skipped": "已略過",
     "flow.status.error": "失敗",
+    "flow.checkAPass": "檢查 A-Pass",
+    "flow.checkAPassDescription": "驗證你的 A-Pass、等級、群組與代幣資格。",
+    "flow.apassChecked": "A-Pass 資格已通過。",
     "flow.finalConfirming": "交易已送出。鏈上確認期間，你可以關閉此視窗並繼續使用應用。",
     "flow.keepWallet": "請保持錢包可用以完成每次簽署。關閉此視窗不會取消已送出的交易。",
 

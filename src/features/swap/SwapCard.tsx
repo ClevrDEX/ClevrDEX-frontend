@@ -64,6 +64,7 @@ export function SwapCard() {
   const [flowOpen, setFlowOpen] = useState(false)
   const [flowRunning, setFlowRunning] = useState(false)
   const [flowError, setFlowError] = useState("")
+  const [flowCanRetry, setFlowCanRetry] = useState(false)
   const [flowSteps, setFlowSteps] = useState<TransactionFlowStep[]>([])
 
   const tokenIn = tokens.find((token) => token.address === tokenInAddress)
@@ -171,12 +172,7 @@ export function SwapCard() {
     address,
     deployment,
     publicClient,
-    enabled:
-      Boolean(address) &&
-      Boolean(deployment) &&
-      Boolean(tokenIn) &&
-      Boolean(tokenOut) &&
-      compliancePath.length >= 2,
+    enabled: false,
     poolPairs: getPathPairs(compliancePath),
     tokenChecks: compliancePath.map((tokenAddress, index) => ({
           token: tokenAddress,
@@ -188,19 +184,6 @@ export function SwapCard() {
   const insufficientBalance =
     parsedAmountIn > 0n && Boolean(address) && parsedAmountIn > balanceIn
   const needsApproval = parsedAmountIn > 0n && allowance < parsedAmountIn
-  const complianceMessage =
-    complianceQuery.data && !complianceQuery.data.allowed
-      ? complianceQuery.data.message
-      : ""
-  const complianceAction =
-    complianceQuery.data && "action" in complianceQuery.data
-      ? complianceQuery.data.action
-      : undefined
-  const complianceInitialChecking =
-    compliancePath.length >= 2 &&
-    (complianceQuery.isLoading ||
-      (complianceQuery.isFetching && !complianceQuery.data))
-  const complianceBlocked = complianceInitialChecking || Boolean(complianceMessage)
   const swapDisabled =
     !address ||
     !deployment ||
@@ -210,13 +193,13 @@ export function SwapCard() {
     !bestQuote ||
     parsedAmountIn <= 0n ||
     insufficientBalance ||
-    complianceBlocked ||
     isPending ||
     flowRunning
 
   async function executeSwapFlow() {
     setError("")
     setFlowError("")
+    setFlowCanRetry(false)
     setTxSuccess(false)
 
     if (
@@ -238,6 +221,22 @@ export function SwapCard() {
     setFlowRunning(true)
 
     try {
+      currentStepId = "check-apass"
+      updateFlowStep(setFlowSteps, currentStepId, { status: "checking" })
+      const complianceResult = await complianceQuery.refetch()
+      if (complianceResult.error) {
+        throw complianceResult.error
+      }
+      if (!complianceResult.data?.allowed) {
+        throw new Error(
+          complianceResult.data?.message || t("common.transactionFailed"),
+        )
+      }
+      updateFlowStep(setFlowSteps, currentStepId, {
+        status: "success",
+        description: t("flow.apassChecked"),
+      })
+
       if (needsApproval) {
         currentStepId = "approve"
         updateFlowStep(setFlowSteps, currentStepId, { status: "active" })
@@ -306,7 +305,11 @@ export function SwapCard() {
       const message = getReadableError(err, t)
       setError(message)
       setFlowError(message)
-      updateFlowStep(setFlowSteps, currentStepId, { status: "error" })
+      setFlowCanRetry(isUserRejectedError(err))
+      updateFlowStep(setFlowSteps, currentStepId, {
+        status: "error",
+        description: message,
+      })
     } finally {
       setFlowRunning(false)
     }
@@ -436,36 +439,18 @@ export function SwapCard() {
         </div>
       </div>
 
-      {complianceBlocked ? (
-        complianceAction ? (
-          <a
-            className="primary-button compliance-action-button"
-            href={complianceAction.href}
-            rel="noreferrer"
-            target="_blank"
-          >
-            <span>{complianceAction.label}</span>
-            <small>{complianceMessage}</small>
-          </a>
-        ) : (
-          <button className="primary-button" disabled type="button">
-            {complianceMessage || t("common.checkingCompliance")}
-          </button>
-        )
-      ) : (
-        <button
-          className="primary-button"
-          disabled={swapDisabled}
-          type="button"
-          onClick={executeSwapFlow}
-        >
-          {flowRunning || isPending
-            ? t("common.processing")
-            : needsApproval
-              ? t("swap.approveAndSwap", { symbol: tokenIn?.symbol ?? "" })
-              : t("swap.action")}
-        </button>
-      )}
+      <button
+        className="primary-button"
+        disabled={swapDisabled}
+        type="button"
+        onClick={executeSwapFlow}
+      >
+        {flowRunning || isPending
+          ? t("common.processing")
+          : needsApproval
+            ? t("swap.approveAndSwap", { symbol: tokenIn?.symbol ?? "" })
+            : t("swap.action")}
+      </button>
 
       <Status
         deploymentReady={Boolean(deployment && deployment.router !== zeroAddress)}
@@ -496,6 +481,8 @@ export function SwapCard() {
         description={t("swap.progressDescription")}
         steps={flowSteps}
         error={flowError}
+        showRetry={flowCanRetry && !flowRunning}
+        onRetry={executeSwapFlow}
         onClose={() => setFlowOpen(false)}
       />
     </section>
@@ -604,7 +591,14 @@ function createSwapFlowSteps(
   tokenSymbol: string,
   t: (key: MessageKey, params?: Record<string, string | number>) => string,
 ) {
-  const steps: TransactionFlowStep[] = []
+  const steps: TransactionFlowStep[] = [
+    {
+      id: "check-apass",
+      label: t("flow.checkAPass"),
+      description: t("flow.checkAPassDescription"),
+      status: "pending",
+    },
+  ]
 
   if (needsApproval) {
     steps.push({
@@ -639,12 +633,8 @@ function getReadableError(
 ) {
   if (error instanceof Error) {
     const message = error.message
-    const normalizedMessage = message.toLowerCase()
 
-    if (
-      normalizedMessage.includes("user rejected") ||
-      normalizedMessage.includes("user denied")
-    ) {
+    if (isUserRejectedError(error)) {
       return t("common.transactionRejected")
     }
 
@@ -655,4 +645,16 @@ function getReadableError(
   }
 
   return t("common.transactionFailed")
+}
+
+function isUserRejectedError(error: unknown) {
+  if (!(error instanceof Error)) {
+    return false
+  }
+
+  const normalizedMessage = error.message.toLowerCase()
+  return (
+    normalizedMessage.includes("user rejected") ||
+    normalizedMessage.includes("user denied")
+  )
 }

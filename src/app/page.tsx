@@ -59,8 +59,8 @@ const features = [
   },
   {
     icon: "03",
-    titleKey: "landing.feature.slippage.title",
-    descriptionKey: "landing.feature.slippage.description",
+    titleKey: "landing.feature.apassEligibility.title",
+    descriptionKey: "landing.feature.apassEligibility.description",
   },
   {
     icon: "04",
@@ -142,38 +142,50 @@ type Mockup = {
   rows: MockupRow[]
 }
 
-const mockups: Mockup[] = [
-  {
-    titleKey: "landing.mock.swap",
-    badgeKey: "landing.mock.ready",
-    rows: [
-      { labelKey: "landing.mock.pay", value: "2,500.00 aUSDC" },
-      { labelKey: "landing.mock.receive", value: "2,498.10 aTSY" },
-      { labelKey: "landing.solution.network", value: "Base Sepolia" },
-      { labelKey: "landing.mock.apass", valueKey: "landing.mock.verified" },
-    ],
-  },
-  {
-    titleKey: "landing.mock.addLiquidity",
-    badgeKey: "landing.mock.pool",
-    rows: [
-      { labelKey: "landing.mock.pair", value: "aUSDC / aTSY" },
-      { label: "aUSDC", value: "10,000.00" },
-      { label: "aTSY", value: "9,992.40" },
-      { labelKey: "landing.mock.poolShare", value: "1.84%" },
-    ],
-  },
-  {
-    titleKey: "landing.mock.swapDetail",
-    badgeKey: "landing.mock.verified",
-    rows: [
-      { labelKey: "landing.mock.amount", value: "2,500.00 aUSDC" },
-      { labelKey: "landing.solution.network", value: "Base Sepolia" },
-      { labelKey: "landing.mock.status", valueKey: "landing.mock.confirmed" },
-      { labelKey: "landing.mock.traceId", value: "TRC-8F4C-21" },
-    ],
-  },
-]
+const MOCK_TX_HASH =
+  "0x8f4c21a3b2d1e4f58920c3b2a1f0e9d8c7b6a59483726150493827162504837"
+
+function truncateTxHash(hash: string) {
+  return `${hash.slice(0, 14)}...${hash.slice(-8)}`
+}
+
+function buildMockups(mockTokenSymbol: string): Mockup[] {
+  return [
+    {
+      titleKey: "landing.mock.swap",
+      badgeKey: "landing.mock.ready",
+      rows: [
+        { labelKey: "landing.mock.pay", value: "2,500.00 aUSDC" },
+        { labelKey: "landing.mock.receive", value: `2,498.10 ${mockTokenSymbol}` },
+        { labelKey: "landing.solution.network", value: "Base Sepolia" },
+        { labelKey: "landing.mock.apass", valueKey: "landing.mock.verified" },
+      ],
+    },
+    {
+      titleKey: "landing.mock.addLiquidity",
+      badgeKey: "landing.mock.pool",
+      rows: [
+        { labelKey: "landing.mock.pair", value: `aUSDC / ${mockTokenSymbol}` },
+        { label: "aUSDC", value: "10,000.00" },
+        { label: mockTokenSymbol, value: "9,992.40" },
+        { labelKey: "landing.mock.poolShare", value: "1.84%" },
+      ],
+    },
+    {
+      titleKey: "landing.mock.swapDetail",
+      badgeKey: "landing.mock.verified",
+      rows: [
+        { labelKey: "landing.mock.amount", value: "2,500.00 aUSDC" },
+        { labelKey: "landing.solution.network", value: "Base Sepolia" },
+        { labelKey: "landing.mock.status", valueKey: "landing.mock.confirmed" },
+        {
+          labelKey: "landing.mock.traceId",
+          value: truncateTxHash(MOCK_TX_HASH),
+        },
+      ],
+    },
+  ]
+}
 
 const trustItems = [
   "landing.trust.item1",
@@ -217,6 +229,20 @@ export default function Home() {
   const deployment = getDexDeployment(chainId)
   const tokenListQuery = useTokenList(chainId, deployment)
   const tokens = tokenListQuery.data ?? deployment?.tokenList ?? []
+  const mockTokenSymbol = useMemo(() => {
+    const aUsdc = tokens.find(
+      (token) => token.symbol.toLowerCase() === "ausdc",
+    )
+    const pairedToken = tokens.find(
+      (token) => token.address !== aUsdc?.address,
+    )
+
+    return pairedToken?.symbol ?? "Token"
+  }, [tokens])
+  const mockups = useMemo(
+    () => buildMockups(mockTokenSymbol),
+    [mockTokenSymbol],
+  )
   const assetSupportValue = useMemo(() => {
     const aUsdc = tokens.find(
       (token) => token.symbol.toLowerCase() === "ausdc",
@@ -306,14 +332,13 @@ export default function Home() {
             <span className="landing-eyebrow">{t("landing.solution.eyebrow")}</span>
             <h2>{t("landing.solution.title")}</h2>
             <p>{t("landing.solution.subtitle")}</p>
-            <div className="landing-checklist">
+            <ul className="landing-checklist">
               {checklist.map((item) => (
-                <span key={item}>
-                  <i aria-hidden="true" />
+                <li key={item}>
                   {t(item)}
-                </span>
+                </li>
               ))}
-            </div>
+            </ul>
           </div>
 
           <div className="landing-mini-card">
@@ -486,14 +511,13 @@ export default function Home() {
             <h2>{t("landing.trust.title")}</h2>
             <p>{t("landing.trust.subtitle")}</p>
           </div>
-          <div className="landing-trust-grid">
+          <ul className="landing-trust-grid">
             {trustItems.map((item) => (
-              <span key={item}>
-                <i aria-hidden="true" />
+              <li key={item}>
                 {t(item)}
-              </span>
+              </li>
             ))}
-          </div>
+          </ul>
         </div>
       </section>
 

@@ -67,6 +67,7 @@ export function LiquidityCard() {
   const [flowOpen, setFlowOpen] = useState(false)
   const [flowRunning, setFlowRunning] = useState(false)
   const [flowError, setFlowError] = useState("")
+  const [flowCanRetry, setFlowCanRetry] = useState(false)
   const [flowSteps, setFlowSteps] = useState<TransactionFlowStep[]>([])
 
   const tokenA = tokens.find((token) => token.address === tokenAAddress)
@@ -192,12 +193,7 @@ export function LiquidityCard() {
     deployment,
     publicClient,
     checkPoolCompliance: false,
-    enabled:
-      Boolean(address) &&
-      Boolean(deployment) &&
-      Boolean(tokenA) &&
-      Boolean(tokenB) &&
-      !sameToken,
+    enabled: false,
     poolPairs: tokenA && tokenB ? [[tokenA.address, tokenB.address]] : [],
     tokenChecks:
       tokenA && tokenB
@@ -224,21 +220,6 @@ export function LiquidityCard() {
   const insufficientBalance = insufficientBalanceA || insufficientBalanceB
   const needsApprovalA = parsedAmountA > 0n && allowanceA < parsedAmountA
   const needsApprovalB = parsedAmountB > 0n && allowanceB < parsedAmountB
-  const complianceMessage =
-    complianceQuery.data && !complianceQuery.data.allowed
-      ? complianceQuery.data.message
-      : ""
-  const complianceAction =
-    complianceQuery.data && "action" in complianceQuery.data
-      ? complianceQuery.data.action
-      : undefined
-  const complianceInitialChecking =
-    Boolean(tokenA) &&
-    Boolean(tokenB) &&
-    !sameToken &&
-    (complianceQuery.isLoading ||
-      (complianceQuery.isFetching && !complianceQuery.data))
-  const complianceBlocked = complianceInitialChecking || Boolean(complianceMessage)
   const actionDisabled =
     !address ||
     !deployment ||
@@ -249,13 +230,13 @@ export function LiquidityCard() {
     parsedAmountA <= 0n ||
     parsedAmountB <= 0n ||
     insufficientBalance ||
-    complianceBlocked ||
     isPending ||
     flowRunning
 
   async function executeAddLiquidityFlow() {
     setError("")
     setFlowError("")
+    setFlowCanRetry(false)
     setTxSuccess(false)
 
     if (
@@ -283,6 +264,22 @@ export function LiquidityCard() {
     setFlowRunning(true)
 
     try {
+      currentStepId = "check-apass"
+      updateFlowStep(setFlowSteps, currentStepId, { status: "checking" })
+      const complianceResult = await complianceQuery.refetch()
+      if (complianceResult.error) {
+        throw complianceResult.error
+      }
+      if (!complianceResult.data?.allowed) {
+        throw new Error(
+          complianceResult.data?.message || t("common.transactionFailed"),
+        )
+      }
+      updateFlowStep(setFlowSteps, currentStepId, {
+        status: "success",
+        description: t("flow.apassChecked"),
+      })
+
       if (needsApprovalA) {
         currentStepId = "approve-a"
         updateFlowStep(setFlowSteps, currentStepId, { status: "active" })
@@ -386,7 +383,11 @@ export function LiquidityCard() {
       const message = getReadableError(err, t)
       setError(message)
       setFlowError(message)
-      updateFlowStep(setFlowSteps, currentStepId, { status: "error" })
+      setFlowCanRetry(isUserRejectedError(err))
+      updateFlowStep(setFlowSteps, currentStepId, {
+        status: "error",
+        description: message,
+      })
     } finally {
       setFlowRunning(false)
     }
@@ -543,36 +544,18 @@ export function LiquidityCard() {
         </div>
       </div>
 
-      {complianceBlocked ? (
-        complianceAction ? (
-          <a
-            className="primary-button compliance-action-button"
-            href={complianceAction.href}
-            rel="noreferrer"
-            target="_blank"
-          >
-            <span>{complianceAction.label}</span>
-            <small>{complianceMessage}</small>
-          </a>
-        ) : (
-          <button className="primary-button" disabled type="button">
-            {complianceMessage || t("common.checkingCompliance")}
-          </button>
-        )
-      ) : (
-        <button
-          className="primary-button"
-          disabled={actionDisabled}
-          type="button"
-          onClick={executeAddLiquidityFlow}
-        >
-          {flowRunning || isPending
-            ? t("common.processing")
-            : needsApprovalA || needsApprovalB
-              ? t("liquidity.approveAndAdd")
-              : t("liquidity.addAction")}
-        </button>
-      )}
+      <button
+        className="primary-button"
+        disabled={actionDisabled}
+        type="button"
+        onClick={executeAddLiquidityFlow}
+      >
+        {flowRunning || isPending
+          ? t("common.processing")
+          : needsApprovalA || needsApprovalB
+            ? t("liquidity.approveAndAdd")
+            : t("liquidity.addAction")}
+      </button>
 
       <LiquidityStatus
         deploymentReady={Boolean(deployment && deployment.router !== zeroAddress)}
@@ -602,6 +585,8 @@ export function LiquidityCard() {
         description={t("liquidity.addProgressDescription")}
         steps={flowSteps}
         error={flowError}
+        showRetry={flowCanRetry && !flowRunning}
+        onRetry={executeAddLiquidityFlow}
         onClose={() => setFlowOpen(false)}
       />
     </section>
@@ -734,7 +719,14 @@ function createAddLiquidityFlowSteps(
   tokenBSymbol: string | undefined,
   t: (key: MessageKey, params?: Record<string, string | number>) => string,
 ) {
-  const steps: TransactionFlowStep[] = []
+  const steps: TransactionFlowStep[] = [
+    {
+      id: "check-apass",
+      label: t("flow.checkAPass"),
+      description: t("flow.checkAPassDescription"),
+      status: "pending",
+    },
+  ]
 
   if (tokenASymbol) {
     steps.push({
@@ -792,12 +784,8 @@ function getReadableError(
 ) {
   if (error instanceof Error) {
     const message = error.message
-    const normalizedMessage = message.toLowerCase()
 
-    if (
-      normalizedMessage.includes("user rejected") ||
-      normalizedMessage.includes("user denied")
-    ) {
+    if (isUserRejectedError(error)) {
       return t("common.transactionRejected")
     }
 
@@ -808,4 +796,16 @@ function getReadableError(
   }
 
   return t("common.transactionFailed")
+}
+
+function isUserRejectedError(error: unknown) {
+  if (!(error instanceof Error)) {
+    return false
+  }
+
+  const normalizedMessage = error.message.toLowerCase()
+  return (
+    normalizedMessage.includes("user rejected") ||
+    normalizedMessage.includes("user denied")
+  )
 }

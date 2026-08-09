@@ -11,6 +11,7 @@ import { useI18n, type MessageKey } from "@/i18n"
 
 export type TransactionFlowStepStatus =
   | "pending"
+  | "checking"
   | "active"
   | "confirming"
   | "success"
@@ -31,6 +32,8 @@ type TransactionFlowModalProps = {
   description: string
   steps: TransactionFlowStep[]
   error?: string
+  showRetry?: boolean
+  onRetry?: () => void
   onClose: () => void
 }
 
@@ -40,6 +43,8 @@ export function TransactionFlowModal({
   description,
   steps,
   error,
+  showRetry = false,
+  onRetry,
   onClose,
 }: TransactionFlowModalProps) {
   const chainId = useChainId()
@@ -105,7 +110,12 @@ export function TransactionFlowModal({
                 <div>
                   <div className="transaction-flow-step-main">
                     <strong>{step.label}</strong>
-                    <span>{t(`flow.status.${step.status}` as MessageKey)}</span>
+                    <span className="transaction-flow-step-status">
+                      {isStepInProgress(step.status) ? (
+                        <i aria-hidden="true" className="transaction-flow-spinner" />
+                      ) : null}
+                      {t(`flow.status.${step.status}` as MessageKey)}
+                    </span>
                   </div>
                   <p>{step.description}</p>
                   {step.hash ? (
@@ -116,7 +126,20 @@ export function TransactionFlowModal({
             ))}
           </ol>
 
-          {error ? <p className="status error">{error}</p> : null}
+          {error ? (
+            <div className="status error transaction-flow-error">
+              <span>{error}</span>
+              {showRetry && onRetry ? (
+                <button
+                  className="transaction-flow-retry"
+                  type="button"
+                  onClick={onRetry}
+                >
+                  {t("common.retry")}
+                </button>
+              ) : null}
+            </div>
+          ) : null}
 
           {isFinalConfirming ? (
             <p className="status">{t("flow.finalConfirming")}</p>
@@ -138,6 +161,10 @@ export function updateFlowStep(
   setFlowSteps((steps) =>
     steps.map((step) => (step.id === stepId ? { ...step, ...patch } : step)),
   )
+}
+
+function isStepInProgress(status: TransactionFlowStepStatus) {
+  return status === "checking" || status === "active" || status === "confirming"
 }
 
 export async function waitForAllowance(

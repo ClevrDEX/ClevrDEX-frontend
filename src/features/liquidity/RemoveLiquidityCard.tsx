@@ -264,6 +264,7 @@ function RemovePositionForm({
   const [flowOpen, setFlowOpen] = useState(false)
   const [flowRunning, setFlowRunning] = useState(false)
   const [flowError, setFlowError] = useState("")
+  const [flowCanRetry, setFlowCanRetry] = useState(false)
   const [flowSteps, setFlowSteps] = useState<TransactionFlowStep[]>([])
 
   const { tokenA, tokenB, pairAddress } = position
@@ -392,9 +393,7 @@ function RemovePositionForm({
     address,
     deployment,
     publicClient,
-    enabled:
-      Boolean(address) &&
-      Boolean(deployment),
+    enabled: false,
     poolPairs: [[tokenA.address, tokenB.address]],
     tokenChecks: [
       {
@@ -411,31 +410,19 @@ function RemovePositionForm({
       },
     ],
   })
-  const complianceMessage =
-    complianceQuery.data && !complianceQuery.data.allowed
-      ? complianceQuery.data.message
-      : ""
-  const complianceAction =
-    complianceQuery.data && "action" in complianceQuery.data
-      ? complianceQuery.data.action
-      : undefined
-  const complianceInitialChecking =
-    complianceQuery.isLoading ||
-    (complianceQuery.isFetching && !complianceQuery.data)
-  const complianceBlocked = complianceInitialChecking || Boolean(complianceMessage)
   const actionDisabled =
     !address ||
     !deployment ||
     deployment.router === zeroAddress ||
     parsedLpAmount <= 0n ||
     insufficientBalance ||
-    complianceBlocked ||
     isPending ||
     flowRunning
 
   async function executeRemoveLiquidityFlow() {
     setError("")
     setFlowError("")
+    setFlowCanRetry(false)
     setTxSuccess(false)
 
     if (!address || !deployment || !publicClient || parsedLpAmount <= 0n) {
@@ -450,6 +437,22 @@ function RemovePositionForm({
     setFlowRunning(true)
 
     try {
+      currentStepId = "check-apass"
+      updateFlowStep(setFlowSteps, currentStepId, { status: "checking" })
+      const complianceResult = await complianceQuery.refetch()
+      if (complianceResult.error) {
+        throw complianceResult.error
+      }
+      if (!complianceResult.data?.allowed) {
+        throw new Error(
+          complianceResult.data?.message || t("common.transactionFailed"),
+        )
+      }
+      updateFlowStep(setFlowSteps, currentStepId, {
+        status: "success",
+        description: t("flow.apassChecked"),
+      })
+
       if (needsApproval) {
         currentStepId = "approve-lp"
         updateFlowStep(setFlowSteps, currentStepId, { status: "active" })
@@ -525,7 +528,11 @@ function RemovePositionForm({
       const message = getReadableError(err, t)
       setError(message)
       setFlowError(message)
-      updateFlowStep(setFlowSteps, currentStepId, { status: "error" })
+      setFlowCanRetry(isUserRejectedError(err))
+      updateFlowStep(setFlowSteps, currentStepId, {
+        status: "error",
+        description: message,
+      })
     } finally {
       setFlowRunning(false)
     }
@@ -659,40 +666,18 @@ function RemovePositionForm({
       </div>
 
       <div className="remove-form-actions">
-        {complianceBlocked ? (
-          complianceAction ? (
-            <a
-              className="primary-button remove-action-button compliance-action-button"
-              href={complianceAction.href}
-              rel="noreferrer"
-              target="_blank"
-            >
-              <span>{complianceAction.label}</span>
-              <small>{complianceMessage}</small>
-            </a>
-          ) : (
-            <button
-              className="primary-button remove-action-button"
-              disabled
-              type="button"
-            >
-              {complianceMessage || t("common.checkingCompliance")}
-            </button>
-          )
-        ) : (
-          <button
-            className="primary-button remove-action-button"
-            disabled={actionDisabled}
-            type="button"
-            onClick={executeRemoveLiquidityFlow}
-          >
-            {flowRunning || isPending
-              ? t("common.processing")
-              : needsApproval
-                ? t("liquidity.approveAndRemove")
-                : t("liquidity.titleRemove")}
-          </button>
-        )}
+        <button
+          className="primary-button remove-action-button"
+          disabled={actionDisabled}
+          type="button"
+          onClick={executeRemoveLiquidityFlow}
+        >
+          {flowRunning || isPending
+            ? t("common.processing")
+            : needsApproval
+              ? t("liquidity.approveAndRemove")
+              : t("liquidity.titleRemove")}
+        </button>
       </div>
 
       <RemoveFormStatus
@@ -710,6 +695,8 @@ function RemovePositionForm({
         description={t("liquidity.removeProgressDescription")}
         steps={flowSteps}
         error={flowError}
+        showRetry={flowCanRetry && !flowRunning}
+        onRetry={executeRemoveLiquidityFlow}
         onClose={() => setFlowOpen(false)}
       />
     </>
@@ -824,7 +811,14 @@ function createRemoveLiquidityFlowSteps(
   needsApproval: boolean,
   t: (key: MessageKey, params?: Record<string, string | number>) => string,
 ) {
-  const steps: TransactionFlowStep[] = []
+  const steps: TransactionFlowStep[] = [
+    {
+      id: "check-apass",
+      label: t("flow.checkAPass"),
+      description: t("flow.checkAPassDescription"),
+      status: "pending",
+    },
+  ]
 
   if (needsApproval) {
     steps.push({
@@ -851,12 +845,8 @@ function getReadableError(
 ) {
   if (error instanceof Error) {
     const message = error.message
-    const normalizedMessage = message.toLowerCase()
 
-    if (
-      normalizedMessage.includes("user rejected") ||
-      normalizedMessage.includes("user denied")
-    ) {
+    if (isUserRejectedError(error)) {
       return t("common.transactionRejected")
     }
 
@@ -867,4 +857,16 @@ function getReadableError(
   }
 
   return t("common.transactionFailed")
+}
+
+function isUserRejectedError(error: unknown) {
+  if (!(error instanceof Error)) {
+    return false
+  }
+
+  const normalizedMessage = error.message.toLowerCase()
+  return (
+    normalizedMessage.includes("user rejected") ||
+    normalizedMessage.includes("user denied")
+  )
 }
